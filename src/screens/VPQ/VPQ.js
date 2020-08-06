@@ -8,10 +8,13 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob'
+import RNPrint from 'react-native-print';
+
 
 import base64 from 'react-native-base64';
 import FileItem from '../component/FileItem';
 const axios = require('axios');
+var RNFS = require('react-native-fs');
 
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 // create a component
@@ -102,6 +105,7 @@ class VPQ extends Component {
         // error reading value
         }
     }
+
     onSubmitPressed() {
         this.setState({ showSecurePinModal: false,isFileLoading:true });
 
@@ -121,18 +125,19 @@ class VPQ extends Component {
                 'Accept': 'application/pdf',
             }, JSON.stringify(body))
             .then((resp) => {
-                console.log(resp,"kjnjknkjnkjn",this.state.currentfile.PrintJobId,this.state.pin);
                 if(resp.data !== "Get print job file failed!: Invalid username and/or password!"){
                     var responseData = resp.data;
                     const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
-                    console.log(file_path,"huhuhuhu");
-                    fs.writeFile(file_path, responseData, 'base64').then((res) => {
+                    var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
+ 
+                    // write the file
+                    RNFS.writeFile(path, responseData, 'base64')
+                    .then((success) => {
                         this.printRemotePDF(file_path)
                         this.setState({isFileLoading:false})
                     })
-                    .catch((error) => {
-                        this.setState({isFileLoading:false})
-                        alert(JSON.stringify(error));
+                    .catch((err) => {
+                        console.log(err.message);
                     });
                 }
                 else{
@@ -151,12 +156,19 @@ class VPQ extends Component {
         }
 
     }
+
+    async printRemotePDF(path) {
+        console.log(path)
+        await RNPrint.print({ filePath: path })
+    }
+
     async downloadFile() {
         try {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
             console.log("njknjknjknkjn");
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 try {
+                    console.log('asdasdasd')
                     const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
                     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                         this.onSubmitPressed();
@@ -173,10 +185,12 @@ class VPQ extends Component {
             console.warn(err);
         }
     }
+
     onPrintPressed(file){
         console.log("knknkjn",file);
         this.setState({showSecurePinModal:true,currentfile:file})
     }
+
     render() {
         return (
             <View style={styles.container}>

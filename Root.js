@@ -113,11 +113,11 @@ const Tab = createBottomTabNavigator();
 function HomeTabs(){
   return(
     <Tab.Navigator tabBar={props => <MyTabBar {...props} />} tabBarOptions={style={height:height(5)}} >
-      <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Folder" component={Folder} />
+      {/* <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Folder" component={Folder} /> */}
       <Tab.Screen name="VPQ" component={VPQ} />
-      <Tab.Screen name="Printer" component={Printer} />
-      <Tab.Screen name="Scan" component={ChatStack} />
+      {/* <Tab.Screen name="Printer" component={Printer} />
+      <Tab.Screen name="Scan" component={ChatStack} /> */}
     </Tab.Navigator>
   )
 }
