@@ -1,9 +1,9 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator,Modal,TextInput,TouchableOpacity,PermissionsAndroid,Alert } from 'react-native';
-import { height,width } from 'react-native-dimension';
+import { View, Text, StyleSheet, ActivityIndicator, Modal, TextInput, TouchableOpacity, PermissionsAndroid, Alert } from 'react-native';
+import { height, width } from 'react-native-dimension';
 import AsyncStorage from '@react-native-community/async-storage';
-import * as Action from '../../liaction/index';
+import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -19,29 +19,31 @@ var RNFS = require('react-native-fs');
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 // create a component
 class VPQ extends Component {
-    constructor(props){
+    constructor(props) {
         super(props)
-        this.state={
-            printedDocument:[],
-            printQueueDocument:[],
-            printedDocumentLoading:true,
-            printQueueDocumentLoading:true,
+        this.state = {
+            printedDocument: [],
+            printQueueDocument: [],
+            printedDocumentLoading: true,
+            printQueueDocumentLoading: true,
             showSecurePinModal: false,
-            currentfile:'',
-            pin:'',
-            userdata:''
+            currentfile: '',
+            pin: '',
+            userdata: ''
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
     }
-    componentDidMount(){
+    
+    componentDidMount() {
         this.loadUserData();
     }
-    getDocumentsFromServer(userdata,index){
+
+    getDocumentsFromServer(userdata, index) {
         var accesstoken = userdata.AccessToken;
         var encodedUser = base64.encode(userdata.UserName);
         var self = this;
         if (accesstoken !== undefined) {
-            var url = BASEURL + '/'+ index + `/${encodedUser}`;
+            var url = BASEURL + '/' + index + `/${encodedUser}`;
             axios({
                 method: 'get',
                 url: url,
@@ -52,12 +54,12 @@ class VPQ extends Component {
             }).then(response => {
 
                 if (response.status === 200) {
-                    console.log("respinse",response);
-                    if(index === 0){
-                            self.setState({printQueueDocument:response.data,printQueueDocumentLoading:false})
+                    console.log("respinse", response);
+                    if (index === 0) {
+                        self.setState({ printQueueDocument: response.data, printQueueDocumentLoading: false })
                     }
-                    else{
-                        self.setState({printedDocument:response.data,printedDocumentLoading:false})
+                    else {
+                        self.setState({ printedDocument: response.data, printedDocumentLoading: false })
                     }
                 }
                 else {
@@ -88,26 +90,29 @@ class VPQ extends Component {
             });
         }
     }
-    loadUserData = async () => {
+
+    loadUserData(){
         try {
-        var self = this;
-        const value = await AsyncStorage.getItem('com.processfusion.userdata');
-        if (value !== null) {
-            var data = JSON.parse(value);
-            self.getDocumentsFromServer(data,0);
-            self.getDocumentsFromServer(data,1);
-            this.setState({userdata:data})
-        }
-        else {
-            // this.setState({isloading:false})
-        }
-    } catch (e) {
-        // error reading value
+            var self = this;
+            // console.log(this.props.userdata.userdata, 'asd');
+            const value = this.props.userdata.userdata;
+            // const value = await AsyncStorage.getItem('com.processfusion.userdata');
+            if (value !== null) {
+                var data = value;
+                self.getDocumentsFromServer(data, 0);
+                self.getDocumentsFromServer(data, 1);
+                this.setState({ userdata: data })
+            }
+            else {
+                // this.setState({isloading:false})
+            }
+        } catch (e) {
+            // error reading value
         }
     }
 
     onSubmitPressed() {
-        this.setState({ showSecurePinModal: false,isFileLoading:true });
+        this.setState({ showSecurePinModal: false, isFileLoading: true });
 
         var accesstoken = this.state.userdata.AccessToken;
         // console.log(accesstoken)
@@ -116,42 +121,41 @@ class VPQ extends Component {
             var url = `https://infinitycloudadmin.uniprint.net/api/printjobs/file`;
             var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
 
-            let fs = RNFetchBlob.fs;
-            let DownloadDir = fs.dirs.DownloadDir;
             RNFetchBlob.fetch('POST', url, {
                 "Authorization": `Bearer ${accesstoken}`,
 
                 'Content-Type': 'application/json',
                 'Accept': 'application/pdf',
             }, JSON.stringify(body))
-            .then((resp) => {
-                if(resp.data !== "Get print job file failed!: Invalid username and/or password!"){
-                    var responseData = resp.data;
-                    const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
-                    var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
- 
-                    // write the file
-                    RNFS.writeFile(path, responseData, 'base64')
-                    .then((success) => {
-                        this.printRemotePDF(file_path)
-                        this.setState({isFileLoading:false})
-                    })
-                    .catch((err) => {
-                        console.log(err.message);
-                    });
-                }
-                else{
-                    this.setState({showSecurePinModal:false,})    
-                    ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
-                    this.setState({isFileLoading:false,pin:''})
-                }
-                
-            })
-            .catch((err) => {
-            
-                console.log(err)
+                .then((resp) => {
+                    if (resp.data !== "Get print job file failed!: Invalid username and/or password!") {
+                        var responseData = resp.data;
+                        // const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
+                        var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
 
-            })
+                        // write the file
+                        RNFS.writeFile(path, responseData, 'base64')
+                            .then((success) => {
+                                console.log('asdasd')
+                                this.printRemotePDF(path)
+                                this.setState({ isFileLoading: false })
+                            })
+                            .catch((err) => {
+                                console.log(err.message);
+                            });
+                    }
+                    else {
+                        this.setState({ showSecurePinModal: false, })
+                        ToastAndroid.show("Invalid Pin...", ToastAndroid.SHORT);
+                        this.setState({ isFileLoading: false, pin: '' })
+                    }
+
+                })
+                .catch((err) => {
+
+                    console.log(err)
+
+                })
 
         }
 
@@ -165,10 +169,10 @@ class VPQ extends Component {
     async downloadFile() {
         try {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
-            console.log("njknjknjknkjn");
+            // console.log("njknjknjknkjn");
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 try {
-                    console.log('asdasdasd')
+                    // console.log('asdasdasd')
                     const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
                     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                         this.onSubmitPressed();
@@ -186,15 +190,15 @@ class VPQ extends Component {
         }
     }
 
-    onPrintPressed(file){
-        console.log("knknkjn",file);
-        this.setState({showSecurePinModal:true,currentfile:file})
+    onPrintPressed(file) {
+        // console.log("knknkjn", file);
+        this.setState({ showSecurePinModal: true, currentfile: file })
     }
 
     render() {
         return (
             <View style={styles.container}>
-                  <Modal
+                <Modal
                     animationType="slide"
                     transparent={true}
                     visible={this.state.showSecurePinModal}
@@ -222,7 +226,7 @@ class VPQ extends Component {
                                         onChangeText={(text) => this.setState({ pin: text })}
                                         style={{ width: width(45), height: height(7), marginTop: height(3), borderBottomColor: "grey", borderBottomWidth: 1 }} />
                                 </View>
-                                <View style={{ width: width(45), height: height(8), borderBottomRightRadius: 20, borderBottomLeftRadius: 20, alignItems: "center", justifyContent: "space-evenly" ,flexDirection:"row"}}>
+                                <View style={{ width: width(45), height: height(8), borderBottomRightRadius: 20, borderBottomLeftRadius: 20, alignItems: "center", justifyContent: "space-evenly", flexDirection: "row" }}>
 
                                     <TouchableOpacity
                                         style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
@@ -233,7 +237,7 @@ class VPQ extends Component {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
-                                        onPress={() => this.setState({showSecurePinModal:false,})}
+                                        onPress={() => this.setState({ showSecurePinModal: false, })}
                                     >
 
                                         <Text style={styles.textStyle}>CANCEL</Text>
@@ -243,45 +247,45 @@ class VPQ extends Component {
                         }
                     </View>
                 </Modal>
-              
-                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
-                    <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
-                        <Text style={{fontFamily:"Roboto",fontSize:18}}>
+
+                <View style={{ height: height(42), width: width(100), alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ height: height(5), width: width(90), alignItems: "flex-start", justifyContent: 'center' }}>
+                        <Text style={{ fontFamily: "Roboto", fontSize: 18 }}>
                             Print queue
                         </Text>
                     </View>
-                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
-                    {this.state.printQueueDocumentLoading
-                    ?
-                    <ActivityIndicator  size="large" color="#125DA3"/>
-                    :
-                    <ScrollView>
-                        {this.state.printQueueDocument.map((file,idx) =>{
-                            return(
-                                <FileItem key={idx} file={file} onPrintPressed={this.onPrintPressed}/>
-                            )
-                        })}    
-                    </ScrollView>}
+                    <View style={{ height: height(35), width: width(100), alignItems: "center", justifyContent: "center" }}>
+                        {this.state.printQueueDocumentLoading
+                            ?
+                            <ActivityIndicator size="large" color="#125DA3" />
+                            :
+                            <ScrollView>
+                                {this.state.printQueueDocument.map((file, idx) => {
+                                    return (
+                                        <FileItem key={idx} file={file} onPrintPressed={this.onPrintPressed} />
+                                    )
+                                })}
+                            </ScrollView>}
                     </View>
                 </View>
-                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
-                    <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
-                        <Text style={{fontFamily:"Roboto",fontSize:18}}>
+                <View style={{ height: height(42), width: width(100), alignItems: "center", justifyContent: "center" }}>
+                    <View style={{ height: height(5), width: width(90), alignItems: "flex-start", justifyContent: 'center' }}>
+                        <Text style={{ fontFamily: "Roboto", fontSize: 18 }}>
                             Printed Docuemnts
                         </Text>
                     </View>
-                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
-                    {this.state.printedDocumentLoading
-                    ?
-                    <ActivityIndicator  size="large" color="#125DA3"/>
-                    :
-                    <ScrollView>
-                        {this.state.printedDocument.map((file,idx) =>{
-                              return(
-                                <FileItem key={idx} file={file}/>
-                            )
-                        })}    
-                    </ScrollView>}
+                    <View style={{ height: height(35), width: width(100), alignItems: "center", justifyContent: "center" }}>
+                        {this.state.printedDocumentLoading
+                            ?
+                            <ActivityIndicator size="large" color="#125DA3" />
+                            :
+                            <ScrollView>
+                                {this.state.printedDocument.map((file, idx) => {
+                                    return (
+                                        <FileItem key={idx} file={file} />
+                                    )
+                                })}
+                            </ScrollView>}
                     </View>
                 </View>
             </View>
@@ -337,7 +341,7 @@ const styles = StyleSheet.create({
 
 function mapStateToProps(state) {
     return {
-        userdata: state.userdata,
+        userdata: state.Credentials,
 
     };
 }
