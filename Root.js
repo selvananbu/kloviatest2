@@ -16,6 +16,7 @@ import Home from './src/screens/Home/Home';
 import Folder from './src/screens/Folder/Folder';
 import VPQ from './src/screens/VPQ/VPQ';
 import Printer from './src/screens/Printer/Printer';
+
 function getTabIcon(label,isFocused) {
   return(
     label === "Home"
@@ -54,7 +55,7 @@ function MyTabBar({ state, descriptors, navigation }) {
 
         const isFocused = state.index === index;
 
-        const onPress = () => {
+        const onTabPress = () => {
           console.log("klmkmlkmkl");
           const event = navigation.emit({
             type: 'tabPress',
@@ -81,6 +82,7 @@ function MyTabBar({ state, descriptors, navigation }) {
             testID={options.tabBarTestID}
             onPress={() => { 
               console.log('onpress');
+              onTabPress()
            }}
             onLongPress={onLongPress}
             style={{ flex:1,width:width(20),zIndex:1,alignItems:"center",justifyContent:"center"}}
@@ -113,11 +115,11 @@ const Tab = createBottomTabNavigator();
 function HomeTabs(){
   return(
     <Tab.Navigator tabBar={props => <MyTabBar {...props} />} tabBarOptions={style={height:height(5)}} >
-      {/* <Tab.Screen name="Home" component={Home} />
-      <Tab.Screen name="Folder" component={Folder} /> */}
+      <Tab.Screen name="Home" component={Home} />
+      <Tab.Screen name="Folder" component={Folder} />
       <Tab.Screen name="VPQ" component={VPQ} />
-      {/* <Tab.Screen name="Printer" component={Printer} />
-      <Tab.Screen name="Scan" component={ChatStack} /> */}
+      <Tab.Screen name="Printer" component={Printer} />
+      <Tab.Screen name="Scan" component={ChatStack} />
     </Tab.Navigator>
   )
 }
