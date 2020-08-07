@@ -59,6 +59,7 @@ class Login extends Component {
                 this.checkForLogin()
             }
             else {
+                this.setState({isloading:false})
                 AsyncStorage.setItem("com.processfusion.isfirsttime",JSON.stringify(false));
                 this.props.navigation.navigate("WizardScreens")
             }

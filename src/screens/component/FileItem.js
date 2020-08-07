@@ -18,6 +18,10 @@ class FileItem extends React.PureComponent {
         if(this.props.onPrintPressed !== undefined)
                 this.props.onPrintPressed(file);
     }
+    onSharePressed(file){
+        if(this.props.onSharePressed !== undefined)
+                this.props.onSharePressed(file);
+    }
     onMenuPressed(file){
             console.log("fieeeeeeee",file);
     }
@@ -46,7 +50,7 @@ class FileItem extends React.PureComponent {
             <TouchableOpacity style={{width:width(10),height:height(6),alignItems:"center",justifyContent:"center"}} onPress={this.onPrintPressed.bind(this,file)}>
             <Image source={require("../../image/print.png")} style={{width:width(5),height:height(5)}} resizeMode="contain"/>
             </TouchableOpacity>
-            <TouchableOpacity style={{width:width(10),height:height(6),alignItems:"center",justifyContent:"center"}} onPress={this.onMenuPressed.bind(this,file)}>
+            <TouchableOpacity style={{width:width(10),height:height(6),alignItems:"center",justifyContent:"center"}} onPress={this.onSharePressed.bind(this,file)}>
             <Image source={require("../../image/share.png")} style={{width:width(5),height:height(5)}} resizeMode="contain"/>
             </TouchableOpacity>
      </TouchableOpacity>
