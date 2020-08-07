@@ -14,7 +14,7 @@ const axios = require('axios');
 const screenWidth = Dimensions.get("window").width;
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 
-const  chartConfig={
+const chartConfig = {
     backgroundColor: "#e26a00",
     backgroundGradientFrom: "#fff",
     backgroundGradientTo: "#ffa726",
@@ -22,21 +22,21 @@ const  chartConfig={
     color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
     style: {
-      borderRadius: 16
+        borderRadius: 16
     },
     propsForDots: {
-      r: "6",
-      strokeWidth: "2",
-      stroke: "#ffa726"
+        r: "6",
+        strokeWidth: "2",
+        stroke: "#ffa726"
     }
-  }
+}
 
 var list = [
-    {image:require("../../image/foldericon.png")},
-    {image:require("../../image/drive.png")},
-    {image:require("../../image/dropbox.png")},
-    {image:require("../../image/gmail.png")}
-    
+    { image: require("../../image/foldericon.png") },
+    { image: require("../../image/drive.png") },
+    { image: require("../../image/dropbox.png") },
+    { image: require("../../image/gmail.png") }
+
 ]
 var printedfile = [
     
@@ -45,14 +45,14 @@ var printedfile = [
 const data = {
     labels: ["January", "February", "March", "April", "May", "June"],
     datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-        color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
-        strokeWidth: 2 // optional
-      }
+        {
+            data: [20, 45, 28, 80, 99, 43],
+            color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`, // optional
+            strokeWidth: 2 // optional
+        }
     ],
     legend: ["Rainy Days"] // optional
-  };
+};
 
 // create a component
 class Home extends Component {
@@ -114,7 +114,7 @@ class Home extends Component {
         this.loadUserData();
     }
     render() {
-        console.log(this.props);
+
         return (
             <View style={styles.container}>
               <View style={{width:width(100),height:height(30),backgroundColor:"#125DA2",borderBottomLeftRadius:50,borderBottomRightRadius:50,position:"absolute",top:0,left:0,right:0}}>
@@ -147,10 +147,10 @@ class Home extends Component {
                             <Text style={{color:"#F8392C",fontSize:32,fontFamily:"Roboto"}}>
                                     {this.state.vpqdata < 10 ? "0"+this.state.vpqdata : this.state.vpqdata}
                             </Text>
-                         </View>
-                         <View style={{width:width(38),height:height(12),alignItems:"center",justifyContent:"center"}}>
-                            <Text style={{color:"rgba(123, 140, 155, 0.8)",fontFamily:"Roboto"}}>
-                                    Pending Jobs in VPQ
+                                </View>
+                                <View style={{ width: width(38), height: height(12), alignItems: "center", justifyContent: "center" }}>
+                                    <Text style={{ color: "rgba(123, 140, 155, 0.8)", fontFamily: "Roboto" }}>
+                                        Pending Jobs in VPQ
                             </Text>
                          </View>
                          <TouchableOpacity style={{width:width(10),height:width(10),borderRadius:width(10)/2,backgroundColor:"#E7F1FA",alignItems:"center",justifyContent:"center"}}>
@@ -167,23 +167,20 @@ class Home extends Component {
                             Sync Accounts
                         </Text>
 
-                        <ScrollView showsHorizontalScrollIndicator={false} horizontal>
-                            {list.map((accounts,idx) =>{
-                                return(
-                                    <TouchableOpacity key={idx} style={{width:width(10),height:width(10),borderRadius:width(10)/2,backgroundColor:"#E7F1FA",alignItems:"center",justifyContent:"center",margin:width(2)}}>
-                                    <Image source={accounts.image} style={{width:width(5),height:height(5)}} resizeMode="contain"/>
-                                    </TouchableOpacity> 
-                                )
-                            })}
-                        </ScrollView>
-
-                     </View>
-
-                     <View style={{width:width(100),height:height(20),alignItems:"center",justifyContent:"center"}}>
-                        <View style={{width:width(95),height:height(4),alignItems:"flex-start",justifyContent:"center"}}>
-                     <Text style={{fontSize:12,fontFamily:"Roboto"}}>
-                            Recently Printed Documents
+                            <Text style={{ fontSize: 12, fontFamily: "Roboto" }}>
+                                Sync Accounts
                         </Text>
+
+                            <ScrollView showsHorizontalScrollIndicator={false} horizontal>
+                                {list.map((accounts, idx) => {
+                                    return (
+                                        <TouchableOpacity key={idx} style={{ width: width(10), height: width(10), borderRadius: width(10) / 2, backgroundColor: "#E7F1FA", alignItems: "center", justifyContent: "center", margin: width(2) }}>
+                                            <Image source={accounts.image} style={{ width: width(5), height: height(5) }} resizeMode="contain" />
+                                        </TouchableOpacity>
+                                    )
+                                })}
+                            </ScrollView>
+
                         </View>
                         <View style={{width:width(95),height:height(16),alignItems:"center",justifyContent:"center"}}>
                        {this.state.recentdocs.length > 0 
@@ -202,9 +199,8 @@ class Home extends Component {
                             }   
                         </View>
                     </View>
-                </View> 
                 </View>
-              
+
             </View>
         );
     }

@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator,Modal,TextInput,TouchableOpacity,PermissionsAndroid,Alert, ToastAndroid , RefreshControl } from 'react-native';
 import { height,width } from 'react-native-dimension';
 import AsyncStorage from '@react-native-community/async-storage';
-import * as Action from '../../liaction/index';
+import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
@@ -20,7 +20,7 @@ var RNFS = require('react-native-fs');
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 // create a component
 class VPQ extends Component {
-    constructor(props){
+    constructor(props) {
         super(props)
         this.state={
             printedDocument:[],
@@ -29,14 +29,15 @@ class VPQ extends Component {
             printedDocumentLoading:true,
             printQueueDocumentLoading:true,
             showSecurePinModal: false,
-            currentfile:'',
-            pin:'',
-            userdata:''
+            currentfile: '',
+            pin: '',
+            userdata: ''
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
     }
-    componentDidMount(){
+    
+    componentDidMount() {
         this.loadUserData();
     }
     getDocumentsFromServer(userdata,index){
@@ -45,7 +46,7 @@ class VPQ extends Component {
         var encodedUser = base64.encode(userdata.UserName);
         var self = this;
         if (accesstoken !== undefined) {
-            var url = BASEURL + '/'+ index + `/${encodedUser}`;
+            var url = BASEURL + '/' + index + `/${encodedUser}`;
             axios({
                 method: 'get',
                 url: url,
@@ -94,21 +95,24 @@ class VPQ extends Component {
             });
         }
     }
-    loadUserData = async () => {
+
+    loadUserData(){
         try {
-        var self = this;
-        const value = await AsyncStorage.getItem('com.processfusion.userdata');
-        if (value !== null) {
-            var data = JSON.parse(value);
-            self.getDocumentsFromServer(data,0);
-            self.getDocumentsFromServer(data,1);
-            this.setState({userdata:data})
-        }
-        else {
-            // this.setState({isloading:false})
-        }
-    } catch (e) {
-        // error reading value
+            var self = this;
+            // console.log(this.props.userdata.userdata, 'asd');
+            const value = this.props.userdata.userdata;
+            // const value = await AsyncStorage.getItem('com.processfusion.userdata');
+            if (value !== null) {
+                var data = value;
+                self.getDocumentsFromServer(data, 0);
+                self.getDocumentsFromServer(data, 1);
+                this.setState({ userdata: data })
+            }
+            else {
+                // this.setState({isloading:false})
+            }
+        } catch (e) {
+            // error reading value
         }
     }
 
@@ -123,8 +127,6 @@ class VPQ extends Component {
             var url = `https://infinitycloudadmin.uniprint.net/api/printjobs/file`;
             var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
 
-            let fs = RNFetchBlob.fs;
-            let DownloadDir = fs.dirs.DownloadDir;
             RNFetchBlob.fetch('POST', url, {
                 "Authorization": `Bearer ${accesstoken}`,
 
@@ -158,7 +160,29 @@ class VPQ extends Component {
             
                 console.log(err)
 
-            })
+                        // write the file
+                        RNFS.writeFile(path, responseData, 'base64')
+                            .then((success) => {
+                                console.log('asdasd')
+                                this.printRemotePDF(path)
+                                this.setState({ isFileLoading: false })
+                            })
+                            .catch((err) => {
+                                console.log(err.message);
+                            });
+                    }
+                    else {
+                        this.setState({ showSecurePinModal: false, })
+                        ToastAndroid.show("Invalid Pin...", ToastAndroid.SHORT);
+                        this.setState({ isFileLoading: false, pin: '' })
+                    }
+
+                })
+                .catch((err) => {
+
+                    console.log(err)
+
+                })
 
         }
 
@@ -172,10 +196,10 @@ class VPQ extends Component {
     async downloadFile() {
         try {
             const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
-            console.log("njknjknjknkjn");
+            // console.log("njknjknjknkjn");
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                 try {
-                    console.log('asdasdasd')
+                    // console.log('asdasdasd')
                     const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
                     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
                         this.onSubmitPressed();
@@ -193,9 +217,9 @@ class VPQ extends Component {
         }
     }
 
-    onPrintPressed(file){
-        console.log("knknkjn",file);
-        this.setState({showSecurePinModal:true,currentfile:file})
+    onPrintPressed(file) {
+        // console.log("knknkjn", file);
+        this.setState({ showSecurePinModal: true, currentfile: file })
     }
     onSharePressed(file){
         console.log("knknkjn",file);
@@ -211,7 +235,7 @@ class VPQ extends Component {
     render() {
         return (
             <View style={styles.container}>
-                  <Modal
+                <Modal
                     animationType="slide"
                     transparent={true}
                     visible={this.state.showSecurePinModal}
@@ -239,7 +263,7 @@ class VPQ extends Component {
                                         onChangeText={(text) => this.setState({ pin: text })}
                                         style={{ width: width(45), height: height(7), marginTop: height(3), borderBottomColor: "grey", borderBottomWidth: 1 }} />
                                 </View>
-                                <View style={{ width: width(45), height: height(8), borderBottomRightRadius: 20, borderBottomLeftRadius: 20, alignItems: "center", justifyContent: "space-evenly" ,flexDirection:"row"}}>
+                                <View style={{ width: width(45), height: height(8), borderBottomRightRadius: 20, borderBottomLeftRadius: 20, alignItems: "center", justifyContent: "space-evenly", flexDirection: "row" }}>
 
                                     <TouchableOpacity
                                         style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
@@ -250,7 +274,7 @@ class VPQ extends Component {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
-                                        onPress={() => this.setState({showSecurePinModal:false,})}
+                                        onPress={() => this.setState({ showSecurePinModal: false, })}
                                     >
 
                                         <Text style={styles.textStyle}>CANCEL</Text>
@@ -358,7 +382,7 @@ const styles = StyleSheet.create({
 
 function mapStateToProps(state) {
     return {
-        userdata: state.userdata,
+        userdata: state.Credentials,
 
     };
 }

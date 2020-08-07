@@ -1,8 +1,8 @@
 import { combineReducers } from "redux";
-import ItemReady from './itemreadyreducer';
+import Credentials from './credentialreducer';
 
 const allReducers = combineReducers({
-    ItemReady : ItemReady,
+    Credentials : Credentials,
 });
 
 export default allReducers;
