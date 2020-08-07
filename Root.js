@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, TouchableOpacity,Image } from 'react-native';
+import { View, Text, TouchableOpacity,Image, ImageBackground } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -16,6 +16,7 @@ import Home from './src/screens/Home/Home';
 import Folder from './src/screens/Folder/Folder';
 import VPQ from './src/screens/VPQ/VPQ';
 import Printer from './src/screens/Printer/Printer';
+import Setting from './src/screens/Settings/Setting';
 
 function getTabIcon(label,isFocused) {
   return(
@@ -109,7 +110,13 @@ function ChatStack(){
     </Stack.Navigator>
   )
 }
- 
+const getSettingsIcon = () => {
+  return(
+    <TouchableOpacity style={{width:width(10),alignItems:"center",justifyContent:"center"}} onPress={() => this.props.navigation.navigate("Setting")}>
+    <Image source={require("./src/image/settingicon.png")} style={{width:width(5),height:height(5)}} resizeMode="contain"/>
+    </TouchableOpacity>
+  )
+}
 const Tab = createBottomTabNavigator();
 
 function HomeTabs(){
@@ -125,12 +132,15 @@ function HomeTabs(){
 }
 
 export default function Root() {
+  
   return (
     
     <NavigationContainer>
     <Stack.Navigator>
           <Stack.Screen name="Login" component={Login}  options={{headerShown:false}} type="reset"/>
-          <Stack.Screen name="Home" component={HomeTabs} options={{title:"Klovia",headerLeft:null}} type="reset"/>
+          <Stack.Screen name="Home" component={HomeTabs} options={{title:"Klovia",headerLeft:null,headerRight:getSettingsIcon}} type="reset"/>
+          <Stack.Screen name="Setting" component={Setting}  options={{headerShown:false}} type="reset"/>
+          
           <Stack.Screen name="WizardScreens" component={WizardScreens}  options={{headerShown:false}} type="reset"/>
           
     </Stack.Navigator>

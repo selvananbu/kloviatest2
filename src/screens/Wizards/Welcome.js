@@ -8,7 +8,7 @@ class Welcome extends Component {
 
     onSignInPressed(){
         console.log("hereeeeeeeee");
-        this.props.navigation.navigate("Login");
+        this.props.navigation.navigate("Login",{'param':true});
     }
     render() {
         console.log(this.props);

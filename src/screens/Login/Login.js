@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ToastAndroid, I
 import { width, height } from 'react-native-dimension';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
+import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
@@ -28,10 +29,17 @@ class Login extends Component {
         this.checkForLogin = this.checkForLogin.bind(this);
         this.checkForFirstTime = this.checkForFirstTime.bind(this);
     }
-
+  
     componentDidMount() {
+        var self = this;
+        console.log("jbnhjbjhbjhb");
         SplashScreen.hide();
-        this.checkForFirstTime();
+        AppInstalledChecker
+        .isAppInstalledAndroid('uniprint')
+        .then((isInstalled) => {
+            self.checkForFirstTime(isInstalled);
+
+        });
     }
 
     checkForLogin = async () => {
@@ -56,7 +64,7 @@ class Login extends Component {
         }
     }
 
-    checkForFirstTime = async () => {
+    checkForFirstTime = async (isInstalled) => {
 
         try {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
@@ -66,7 +74,7 @@ class Login extends Component {
             }
             else {
                 AsyncStorage.setItem("com.processfusion.isfirsttime", JSON.stringify(false));
-                this.props.navigation.navigate("WizardScreens", {'param': 'testparam'})
+                this.props.navigation.navigate("WizardScreens", {'param': isInstalled})
             }
         } catch (e) {
             // error reading value
