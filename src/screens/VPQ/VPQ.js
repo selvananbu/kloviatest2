@@ -14,8 +14,12 @@ import Share from "react-native-share";
 
 import base64 from 'react-native-base64';
 import FileItem from '../component/FileItem';
+
+import MainApiClient_document from '../../api/documentapi'
+
 const axios = require('axios');
 var RNFS = require('react-native-fs');
+
 
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 // create a component
@@ -40,59 +44,36 @@ class VPQ extends Component {
     componentDidMount() {
         this.loadUserData();
     }
-    getDocumentsFromServer(userdata,index){
+
+    getPrintJobsCurrentCallback(index, response){
+        if (response.status === 200) {
+            // console.log("respinse",response);
+            if(index === 0){
+                    ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
+                    this.setState({printQueueDocument:response.data,printQueueDocumentLoading:false,refreshing:false})
+            }
+            else{
+                ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
+                this.setState({printedDocument:response.data,printedDocumentLoading:false,refreshing:false})
+                
+            }
+        }
+        else {
+            console.log("njknjknkjn");
+        }
+    }
+    
+    getDocumentsFromServer(userdata){
         this.setState({refreshing:true})
         var accesstoken = userdata.AccessToken;
         var encodedUser = base64.encode(userdata.UserName);
         var self = this;
+        
         if (accesstoken !== undefined) {
-            var url = BASEURL + '/' + index + `/${encodedUser}`;
-            axios({
-                method: 'get',
-                url: url,
-                headers: {
-                    Authorization: `Bearer ${accesstoken}`
-                },
+            
+            new MainApiClient_document().GET_printJobsCurrent(this.getPrintJobsCurrentCallback.bind(this, 0), '0', encodedUser, accesstoken)
+            new MainApiClient_document().GET_printJobsCurrent(this.getPrintJobsCurrentCallback.bind(this, 1), '1', encodedUser, accesstoken)
 
-            }).then(response => {
-
-                if (response.status === 200) {
-                    console.log("respinse",response);
-                    if(index === 0){
-                            ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
-                            self.setState({printQueueDocument:response.data,printQueueDocumentLoading:false,refreshing:false})
-                    }
-                    else{
-                        ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
-                        self.setState({printedDocument:response.data,printedDocumentLoading:false,refreshing:false})
-                    }
-                }
-                else {
-                    console.log("njknjknkjn");
-                }
-            });
-
-            var printedurl = BASEURL + '/1' + `/${encodedUser}`;
-
-            axios({
-                method: 'get',
-                url: printedurl,
-
-                headers: {
-                    Authorization: `Bearer ${accesstoken}`
-                },
-
-            }).then(response => {
-
-                if (response.status === 200) {
-                    var temp = this.state.fileList;
-                    temp = response.data;
-                    self.setState({ printedFileList: temp, isloadingFileData: false, refreshing: false })
-                }
-                else {
-                    console.log("njknjknkjn");
-                }
-            });
         }
     }
 
@@ -104,8 +85,7 @@ class VPQ extends Component {
             // const value = await AsyncStorage.getItem('com.processfusion.userdata');
             if (value !== null) {
                 var data = value;
-                self.getDocumentsFromServer(data, 0);
-                self.getDocumentsFromServer(data, 1);
+                self.getDocumentsFromServer(data);
                 this.setState({ userdata: data })
             }
             else {
@@ -119,44 +99,66 @@ class VPQ extends Component {
     onSubmitPressed() {
         this.setState({ showSecurePinModal: false,isFileLoading:true });
         ToastAndroid.show("Loading File...",ToastAndroid.SHORT)
-
+        // console.log(new MainApiClient_document(), 'sadasd')
         var accesstoken = this.state.userdata.AccessToken;
         // console.log(accesstoken)
         if (accesstoken !== undefined) {
-            // console.log(accesstoken);
-            var url = `https://infinitycloudadmin.uniprint.net/api/printjobs/file`;
             var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
 
-            RNFetchBlob.fetch('POST', url, {
-                "Authorization": `Bearer ${accesstoken}`,
+            new MainApiClient_document().GET_printJobsPrintFile(this.downLoadPrintFile.bind(this), body, accesstoken)
 
-                'Content-Type': 'application/json',
-                'Accept': 'application/pdf',
-            }, JSON.stringify(body))
-            .then((resp) => {
-                if(resp.data !== "Get print job file failed!: Invalid username and/or password!"){
-                    var responseData = resp.data;
-                    const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
-                    var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
+            // RNFetchBlob.fetch('POST', url, {
+            //     "Authorization": `Bearer ${accesstoken}`,
+
+            //     'Content-Type': 'application/json',
+            //     'Accept': 'application/pdf',
+            // }, JSON.stringify(body))
+            // .then((resp) => {
+            //     if(resp.data !== "Get print job file failed!: Invalid username and/or password!"){
+            //         var responseData = resp.data;
+            //         const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
+            //         var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
  
-                    // write the file
-                    RNFS.writeFile(path, responseData, 'base64')
-                    .then((success) => {
-                        this.printRemotePDF(file_path)
-                        this.setState({isFileLoading:false})
-                    })
-                    .catch((err) => {
-                        console.log(err.message);
-                    });
-                }
-                else{
-                    this.setState({showSecurePinModal:false})    
-                    ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
-                    this.setState({isFileLoading:false,pin:''})
-                }
+            //         // write the file
+            //         RNFS.writeFile(path, responseData, 'base64')
+            //         .then((success) => {
+            //             this.printRemotePDF(file_path)
+            //             this.setState({isFileLoading:false})
+            //         })
+            //         .catch((err) => {
+            //             console.log(err.message);
+            //         });
+            //     }
+            //     else{
+            //         this.setState({showSecurePinModal:false})    
+            //         ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
+            //         this.setState({isFileLoading:false,pin:''})
+            //     }
                 
-            })
+            // })
           }
+    }
+
+    downLoadPrintFile(resp){
+        if(resp.data !== "Get print job file failed!: Invalid username and/or password!" && resp.data !== ""){
+            var responseData = resp.data;
+            // const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
+            var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
+            // write the file
+            RNFS.writeFile(path, responseData, 'base64')
+            .then((success) => {
+                this.printRemotePDF(path)
+                this.setState({isFileLoading:false})
+            })
+            .catch((err) => {
+                console.log(err.message);
+            });
+        }
+        else{
+            this.setState({showSecurePinModal:false})    
+            ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
+            this.setState({isFileLoading:false,pin:''})
+        }
     }
 
     async printRemotePDF(path) {
