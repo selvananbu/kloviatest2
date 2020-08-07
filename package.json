@@ -23,6 +23,7 @@
     "react-native": "0.63.2",
     "react-native-base64": "^0.1.0",
     "react-native-chart-kit": "^6.4.1",
+    "react-native-check-app-install": "0.0.5",
     "react-native-dimension": "^1.0.6",
     "react-native-fs": "^2.16.6",
     "react-native-gesture-handler": "^1.6.1",

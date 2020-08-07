@@ -7,7 +7,7 @@ import { Dimensions } from "react-native";
 import FileItem from '../component/FileItem';
 import base64 from 'react-native-base64';
 import AsyncStorage from '@react-native-community/async-storage';
-import * as Action from '../../liaction/index';
+import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 const axios = require('axios');

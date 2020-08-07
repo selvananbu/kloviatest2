@@ -156,36 +156,7 @@ class VPQ extends Component {
                 }
                 
             })
-            .catch((err) => {
-            
-                console.log(err)
-
-                        // write the file
-                        RNFS.writeFile(path, responseData, 'base64')
-                            .then((success) => {
-                                console.log('asdasd')
-                                this.printRemotePDF(path)
-                                this.setState({ isFileLoading: false })
-                            })
-                            .catch((err) => {
-                                console.log(err.message);
-                            });
-                    }
-                    else {
-                        this.setState({ showSecurePinModal: false, })
-                        ToastAndroid.show("Invalid Pin...", ToastAndroid.SHORT);
-                        this.setState({ isFileLoading: false, pin: '' })
-                    }
-
-                })
-                .catch((err) => {
-
-                    console.log(err)
-
-                })
-
-        }
-
+          }
     }
 
     async printRemotePDF(path) {

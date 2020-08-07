@@ -5,6 +5,7 @@ import { width, height } from 'react-native-dimension';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
 import AsyncStorage from '@react-native-community/async-storage';
+import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
@@ -56,6 +57,13 @@ class Login extends Component {
 
     checkForFirstTime = async () => {
 
+        AppInstalledChecker
+        .isAppInstalled('uniprint')
+        .then((isInstalled) => {
+                this.openWiazrdScreens(isInstalled)
+        });
+    }
+    openWiazrdScreens= async(isInstalled) =>{
         try {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
 
@@ -65,13 +73,11 @@ class Login extends Component {
             else {
                 this.setState({isloading:false})
                 AsyncStorage.setItem("com.processfusion.isfirsttime",JSON.stringify(false));
-                this.props.navigation.navigate("WizardScreens")
+                this.props.navigation.navigate("WizardScreens",{uniprintavailable:isInstalled})
             }
         } catch (e) {
             // error reading value
         }
-
-
     }
 
     getNewToekn(data) {
