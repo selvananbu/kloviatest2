@@ -60,9 +60,11 @@ class Login extends Component {
 
         try {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
-
+            console.log(value, 'sadasd')
             if (value !== null) {
-                this.checkForLogin()
+                // this.checkForLogin()
+                this.props.navigation.navigate("Home");
+
             }
             else {
                 AsyncStorage.setItem("com.processfusion.isfirsttime", JSON.stringify(false));

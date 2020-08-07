@@ -46,6 +46,7 @@ class VPQ extends Component {
     }
 
     getPrintJobsCurrentCallback(index, response){
+        console.log(response, 'response')
         if (response.status === 200) {
             // console.log("respinse",response);
             if(index === 0){

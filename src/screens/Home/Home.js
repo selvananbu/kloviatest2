@@ -92,6 +92,7 @@ class Home extends Component {
     loadUserData = async () => {
         try {
             const value = await AsyncStorage.getItem('com.processfusion.userdata');
+            console.log(this.props)
             if (value !== null) {
                 var data = JSON.parse(value);
                 this.getVPQData(data);
