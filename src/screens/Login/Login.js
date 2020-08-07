@@ -5,11 +5,12 @@ import { width, height } from 'react-native-dimension';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
 import AsyncStorage from '@react-native-community/async-storage';
-import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 const axios = require('axios');
+
+import MainApiClient_auth from '../../api/authapi'
 
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/account/login";
 // var BASEURL = "https://inifnitycloudc-stage.azurewebsites.net/api/account/login";
@@ -57,13 +58,6 @@ class Login extends Component {
 
     checkForFirstTime = async () => {
 
-        AppInstalledChecker
-        .isAppInstalled('uniprint')
-        .then((isInstalled) => {
-                this.openWiazrdScreens(isInstalled)
-        });
-    }
-    openWiazrdScreens= async(isInstalled) =>{
         try {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
 
@@ -71,62 +65,68 @@ class Login extends Component {
                 this.checkForLogin()
             }
             else {
-                this.setState({isloading:false})
-                AsyncStorage.setItem("com.processfusion.isfirsttime",JSON.stringify(false));
-                this.props.navigation.navigate("WizardScreens",{uniprintavailable:isInstalled})
+                AsyncStorage.setItem("com.processfusion.isfirsttime", JSON.stringify(false));
+                this.props.navigation.navigate("WizardScreens", {'param': 'testparam'})
             }
         } catch (e) {
             // error reading value
         }
+
+
     }
 
     getNewToekn(data) {
-        axios({
-            method: 'post',
-            url: "https://infinitycloudadmin.uniprint.net/api/account/refreshtoken",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: {
-                AccessToken: data.AccessToken,
-                RefreshToken: data.RefreshToken,
-                Rts: data.Rts
-            }
-        }).then(response => {
-            if (response.status === 200) {
-                var data = response.data;
-                this.props.setUserCredentials(data);
-                AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
-                Toast.show('Token Refreshed...', Toast.SHORT);
-                this.props.navigation.navigate("Home", { data });
-            }
+        const body = {
+            AccessToken: data.AccessToken,
+            RefreshToken: data.RefreshToken,
+            Rts: data.Rts
+        }
+        // console.log(MainApiClient_auth, 'asdasd')
+        new MainApiClient_auth().POST_login(this.getTokenCallback.bind(this), body)
 
-        });
+    }
 
+    getTokenCallback(responseData){
+        console.log(responseData, 'asdasd')
+        if (responseData.status === 200) {
+            var data = responseData.data;
+            this.props.setUserCredentials(data);
+            AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
+            Toast.show('Token Refreshed...', Toast.SHORT);
+            this.props.navigation.navigate("Home", { data });
+        }
     }
     
     onSignInPressed(username, password) {
-        axios({
-            method: 'post',
-            url: BASEURL,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: {
-                UserName: username,
-                Password: password
-            }
-        }).then(response => {
 
-            if (response.status === 200) {
-                var data = response.data;
-                this.props.setUserCredentials(data);
-                AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
-                Toast.show('Successfully Logged In...', Toast.SHORT);
-                this.props.navigation.navigate("Home", { data });
-            }
+        var body = {
+            UserName: username,
+            Password: password
+        };
 
-        });
+        new MainApiClient_auth().POST_loginFirst(this.getTokenCallback.bind(this), body)
+
+        // axios({
+        //     method: 'post',
+        //     url: BASEURL,
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     data: {
+        //         UserName: username,
+        //         Password: password
+        //     }
+        // }).then(response => {
+        //     console.log(response)
+        //     if (response.status === 200) {
+        //         var data = response.data;
+        //         this.props.setUserCredentials(data);
+        //         AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
+        //         Toast.show('Successfully Logged In...', Toast.SHORT);
+        //         this.props.navigation.navigate("Home", { data });
+        //     }
+
+        // });
 
     }
     render() {
