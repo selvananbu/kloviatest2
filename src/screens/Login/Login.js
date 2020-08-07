@@ -66,7 +66,7 @@ class Login extends Component {
             }
             else {
                 AsyncStorage.setItem("com.processfusion.isfirsttime", JSON.stringify(false));
-                this.props.navigation.navigate("WizardScreens")
+                this.props.navigation.navigate("WizardScreens", {'param': 'testparam'})
             }
         } catch (e) {
             // error reading value

@@ -21,6 +21,7 @@ class WizardScreens extends Component {
 
        }
     render() {
+        console.log('sadasdasd', this.props)
         var index = this.state.index;
         return (
             <View style={styles.container}>
