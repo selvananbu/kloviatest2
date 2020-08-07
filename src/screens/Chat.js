@@ -12,12 +12,12 @@ export default class Chat extends Component {
   render() {
     return (
       <SafeAreaView style={{flex:1,alignItems:"center",justifyContent:"center"}}>
-        <Text style={{marginBottom:height(5)}}> Welcome to Chat Screen in Tab Navigator </Text>
-        <TouchableOpacity style={{width:width(45),height:height(6),borderRadius:12,backgroundColor:"#baa6ed",alignItems:"center",justifyContent:"center"}} onPress={() => this.props.navigation.navigate("Test")}>
+        <Text style={{marginBottom:height(5)}}> NFC/Bluetooth Connector </Text>
+        {/* <TouchableOpacity style={{width:width(45),height:height(6),borderRadius:12,backgroundColor:"#baa6ed",alignItems:"center",justifyContent:"center"}} onPress={() => this.props.navigation.navigate("Test")}>
             <Text style={{fontSize:18,fontWeight:"500",color:"#fff"}}>
                 Move to Test
             </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </SafeAreaView>
     );
   }

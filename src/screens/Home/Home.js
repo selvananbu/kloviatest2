@@ -1,15 +1,18 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet,Image, ImageBackground, ActivityIndicator } from 'react-native';
 import { width, height } from 'react-native-dimension';
 import { TouchableNativeFeedback, TouchableOpacity, ScrollView } from 'react-native-gesture-handler';
 import { Dimensions } from "react-native";
 import FileItem from '../component/FileItem';
-import { LineChart } from "react-native-chart-kit";
+import base64 from 'react-native-base64';
+import AsyncStorage from '@react-native-community/async-storage';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+const axios = require('axios');
 const screenWidth = Dimensions.get("window").width;
+var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 
 const chartConfig = {
     backgroundColor: "#e26a00",
@@ -36,12 +39,7 @@ var list = [
 
 ]
 var printedfile = [
-    {
-        DataFileName: "7210a00e-4696-4829-8c1c-8a575cd9df80.ppf",
-        Date: "2020-07-24T13:40:34.9",
-        DocumentName: "Anbu Selvan Mobile Developer.pdf",
-        Status: 0
-    },
+    
 ];
 
 const data = {
@@ -58,50 +56,116 @@ const data = {
 
 // create a component
 class Home extends Component {
+    constructor(props){
+        super(props);
+        this.state={
+            vpqdata:'',
+            userdata:'',
+            recentdocs:[]
+        }
+    }
+   getVPQData(userdata){
+    var accesstoken = userdata.AccessToken;
+    var encodedUser = base64.encode(userdata.UserName);
+    
+    var self = this;
+    if (accesstoken !== undefined) {
+        var url = BASEURL + '/0' + `/${encodedUser}`;
+        axios({
+            method: 'get',
+            url: url,
+            headers: {
+                Authorization: `Bearer ${accesstoken}`
+            },
 
-    componentDidMount() {
-        // console.log("lkmlkm", this.props);
+        }).then(response => {
+            console.log(response,"njknjnjknkjn");
+            if (response.status === 200) {
+                console.log("respinse",response);
+               self.setState({vpqdata:response.data.length,recentdocs:response.data})
+               
+            }
+            else {
+                console.log("njknjknkjn");
+            }
+        });
+
+   }
+}
+   loadUserData = async () => {
+    try {
+    var self = this;
+    const value = await AsyncStorage.getItem('com.processfusion.userdata');
+    if (value !== null) {
+        var data = JSON.parse(value);
+        console.log("kjnmjknjk",data);
+        this.getVPQData(data);
+        this.setState({userdata:data})
+    }
+    else {
+        // this.setState({isloading:false})
+    }
+} catch (e) {
+    // error reading value
+    }
+}
+
+    componentDidMount(){
+        this.loadUserData();
     }
     render() {
 
         return (
             <View style={styles.container}>
-                <View style={{ width: width(100), height: height(30), backgroundColor: "#125DA2", borderBottomLeftRadius: 50, borderBottomRightRadius: 50, position: "absolute", top: 0, left: 0, right: 0 }}>
-                    <View style={{ width: width(100), height: height(15), paddingLeft: width(5), justifyContent: "center" }}>
-                        <Text style={{ fontSize: 22, color: "#fff", opacity: 0.40 }}>
-                            Hello,
+              <View style={{width:width(100),height:height(30),backgroundColor:"#125DA2",borderBottomLeftRadius:50,borderBottomRightRadius:50,position:"absolute",top:0,left:0,right:0}}>
+                    {this.state.userdata !== ''
+                    ?
+                    <View style={{width:width(100),height:height(15),paddingLeft:width(5),justifyContent:"center"}}>
+                    <Text style={{fontSize:22,color:"#fff",opacity:0.40}}>
+                        Hello,
                     </Text>
-                        <Text style={{ fontSize: 22, color: "#fff", fontWeight: "bold" }}>
-                            Anbu Selvan
+                    <Text style={{fontSize:22,color:"#fff",fontWeight:"bold"}}>
+                        {this.state.userdata.UserName}
                     </Text>
                     </View>
+                    :
+                    <ActivityIndicator  size="large" color="#125DA3"/>
+                    }
                 </View>
                 <View>
-                    <View style={{ width: width(100), height: height(30), marginTop: height(4), alignItems: "center", justifyContent: "center" }}>
-
-                        <Image source={require("../../image/chart.png")} style={{ width: width(95), height: height(30) }} resizeMode="contain" />
-                    </View>
-                    <View style={{ width: width(100), height: height(38), alignItems: "center", justifyContent: "center" }}>
-                        <ImageBackground source={require("../../image/kpiwidget.png")} style={{ width: width(85), height: height(12), alignItems: "center", justifyContent: "center", flexDirection: "row" }}>
-                            <TouchableOpacity style={{ width: width(85), height: height(12), alignItems: "center", justifyContent: "center", flexDirection: "row" }} onPress={() => {
-                                console.log('onpress');
-                            }}>
-                                <View style={{ width: width(17), height: height(12), alignItems: "center", justifyContent: "center" }}>
-                                    <Text style={{ color: "#F8392C", fontSize: 32, fontFamily: "Roboto" }}>
-                                        00
+                <View style={{width:width(100),height:height(30),marginTop:height(4),alignItems:"center",justifyContent:"center"}}>
+       
+                 <Image source={require("../../image/chart.png")} style={{width:width(95),height:height(30)}} resizeMode="contain"/>
+                 </View>
+                 <View style={{width:width(100),height:height(38),alignItems:"center",justifyContent:"center"}}>
+                     <ImageBackground source={require("../../image/kpiwidget.png")} style={{width:width(85),height:height(12),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>
+                     {this.state.vpqdata !== ''
+                        ?
+                         <TouchableOpacity style={{width:width(85),height:height(12),alignItems:"center",justifyContent:"center",flexDirection:"row"}} onPress={() => this.props.navigation.navigate("VPQ")}>
+                        
+                         <View style={{width:width(17),height:height(12),alignItems:"center",justifyContent:"center"}}>
+                            <Text style={{color:"#F8392C",fontSize:32,fontFamily:"Roboto"}}>
+                                    {this.state.vpqdata < 10 ? "0"+this.state.vpqdata : this.state.vpqdata}
                             </Text>
                                 </View>
                                 <View style={{ width: width(38), height: height(12), alignItems: "center", justifyContent: "center" }}>
                                     <Text style={{ color: "rgba(123, 140, 155, 0.8)", fontFamily: "Roboto" }}>
                                         Pending Jobs in VPQ
                             </Text>
-                                </View>
-                                <TouchableOpacity style={{ width: width(10), height: width(10), borderRadius: width(10) / 2, backgroundColor: "#E7F1FA", alignItems: "center", justifyContent: "center" }}>
-                                    <Image source={require("../../image/right.png")} style={{ width: width(3), height: height(2) }} resizeMode="contain" />
-                                </TouchableOpacity>
-                            </TouchableOpacity>
-                        </ImageBackground>
-                        <View style={{ width: width(95), height: height(12), alignItems: "flex-start", justifyContent: "center" }}>
+                         </View>
+                         <TouchableOpacity style={{width:width(10),height:width(10),borderRadius:width(10)/2,backgroundColor:"#E7F1FA",alignItems:"center",justifyContent:"center"}}>
+                         <Image source={require("../../image/right.png")} style={{width:width(3),height:height(2)}} resizeMode="contain"/>
+                         </TouchableOpacity>
+                         </TouchableOpacity>
+                         :
+                         <ActivityIndicator  size="large" color="#125DA3"/>
+}
+                     </ImageBackground>
+                     <View style={{width:width(95),height:height(12),alignItems:"flex-start",justifyContent:"center"}}>
+                        
+                        <Text style={{fontSize:12,fontFamily:"Roboto"}}>
+                            Sync Accounts
+                        </Text>
 
                             <Text style={{ fontSize: 12, fontFamily: "Roboto" }}>
                                 Sync Accounts
@@ -118,22 +182,21 @@ class Home extends Component {
                             </ScrollView>
 
                         </View>
-
-                        <View style={{ width: width(100), height: height(20), alignItems: "center", justifyContent: "center" }}>
-                            <View style={{ width: width(95), height: height(4), alignItems: "flex-start", justifyContent: "center" }}>
-                                <Text style={{ fontSize: 12, fontFamily: "Roboto" }}>
-                                    Recently Printed Documents
-                        </Text>
-                            </View>
-                            <View style={{ width: width(95), height: height(16), alignItems: "center", justifyContent: "center" }}>
-                                <ScrollView showsVerticalScrollIndicator={false}>
-                                    {printedfile.map((file, idx) => {
-                                        return (
-                                            <FileItem file={file} key={idx} />
-                                        )
-                                    })}
-                                </ScrollView>
-                            </View>
+                        <View style={{width:width(95),height:height(16),alignItems:"center",justifyContent:"center"}}>
+                       {this.state.recentdocs.length > 0 
+                       ?
+                       <ScrollView showsVerticalScrollIndicator={false}>
+                           {this.state.recentdocs.map((file,idx) =>{
+                               return(
+                                    <FileItem file={file} key={idx}/>
+                               )
+                           })}
+                        </ScrollView> 
+                        :
+                        <Text>
+                                No Recent Files....
+                        </Text> 
+                            }   
                         </View>
                     </View>
                 </View>

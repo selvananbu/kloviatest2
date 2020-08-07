@@ -19,9 +19,12 @@ class FileItem extends React.PureComponent {
         if (this.props.onPrintPressed !== undefined)
             this.props.onPrintPressed(file);
     }
-
-    onMenuPressed(file) {
-        // console.log("fieeeeeeee", file);
+    onSharePressed(file){
+        if(this.props.onSharePressed !== undefined)
+                this.props.onSharePressed(file);
+    }
+    onMenuPressed(file){
+            console.log("fieeeeeeee",file);
     }
     
     render() {

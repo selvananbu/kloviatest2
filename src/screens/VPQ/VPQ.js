@@ -1,7 +1,7 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Modal, TextInput, TouchableOpacity, PermissionsAndroid, Alert } from 'react-native';
-import { height, width } from 'react-native-dimension';
+import { View, Text, StyleSheet, ActivityIndicator,Modal,TextInput,TouchableOpacity,PermissionsAndroid,Alert, ToastAndroid , RefreshControl } from 'react-native';
+import { height,width } from 'react-native-dimension';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob'
 import RNPrint from 'react-native-print';
+import Share from "react-native-share";
 
 
 import base64 from 'react-native-base64';
@@ -21,24 +22,26 @@ var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
 class VPQ extends Component {
     constructor(props) {
         super(props)
-        this.state = {
-            printedDocument: [],
-            printQueueDocument: [],
-            printedDocumentLoading: true,
-            printQueueDocumentLoading: true,
+        this.state={
+            printedDocument:[],
+            printQueueDocument:[],
+            refreshing: false,
+            printedDocumentLoading:true,
+            printQueueDocumentLoading:true,
             showSecurePinModal: false,
             currentfile: '',
             pin: '',
             userdata: ''
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
+        this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
     }
     
     componentDidMount() {
         this.loadUserData();
     }
-
-    getDocumentsFromServer(userdata, index) {
+    getDocumentsFromServer(userdata,index){
+        this.setState({refreshing:true})
         var accesstoken = userdata.AccessToken;
         var encodedUser = base64.encode(userdata.UserName);
         var self = this;
@@ -54,12 +57,14 @@ class VPQ extends Component {
             }).then(response => {
 
                 if (response.status === 200) {
-                    console.log("respinse", response);
-                    if (index === 0) {
-                        self.setState({ printQueueDocument: response.data, printQueueDocumentLoading: false })
+                    console.log("respinse",response);
+                    if(index === 0){
+                            ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
+                            self.setState({printQueueDocument:response.data,printQueueDocumentLoading:false,refreshing:false})
                     }
-                    else {
-                        self.setState({ printedDocument: response.data, printedDocumentLoading: false })
+                    else{
+                        ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
+                        self.setState({printedDocument:response.data,printedDocumentLoading:false,refreshing:false})
                     }
                 }
                 else {
@@ -112,7 +117,8 @@ class VPQ extends Component {
     }
 
     onSubmitPressed() {
-        this.setState({ showSecurePinModal: false, isFileLoading: true });
+        this.setState({ showSecurePinModal: false,isFileLoading:true });
+        ToastAndroid.show("Loading File...",ToastAndroid.SHORT)
 
         var accesstoken = this.state.userdata.AccessToken;
         // console.log(accesstoken)
@@ -127,38 +133,30 @@ class VPQ extends Component {
                 'Content-Type': 'application/json',
                 'Accept': 'application/pdf',
             }, JSON.stringify(body))
-                .then((resp) => {
-                    if (resp.data !== "Get print job file failed!: Invalid username and/or password!") {
-                        var responseData = resp.data;
-                        // const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
-                        var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
-
-                        // write the file
-                        RNFS.writeFile(path, responseData, 'base64')
-                            .then((success) => {
-                                console.log('asdasd')
-                                this.printRemotePDF(path)
-                                this.setState({ isFileLoading: false })
-                            })
-                            .catch((err) => {
-                                console.log(err.message);
-                            });
-                    }
-                    else {
-                        this.setState({ showSecurePinModal: false, })
-                        ToastAndroid.show("Invalid Pin...", ToastAndroid.SHORT);
-                        this.setState({ isFileLoading: false, pin: '' })
-                    }
-
-                })
-                .catch((err) => {
-
-                    console.log(err)
-
-                })
-
-        }
-
+            .then((resp) => {
+                if(resp.data !== "Get print job file failed!: Invalid username and/or password!"){
+                    var responseData = resp.data;
+                    const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
+                    var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
+ 
+                    // write the file
+                    RNFS.writeFile(path, responseData, 'base64')
+                    .then((success) => {
+                        this.printRemotePDF(file_path)
+                        this.setState({isFileLoading:false})
+                    })
+                    .catch((err) => {
+                        console.log(err.message);
+                    });
+                }
+                else{
+                    this.setState({showSecurePinModal:false})    
+                    ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
+                    this.setState({isFileLoading:false,pin:''})
+                }
+                
+            })
+          }
     }
 
     async printRemotePDF(path) {
@@ -194,6 +192,16 @@ class VPQ extends Component {
         // console.log("knknkjn", file);
         this.setState({ showSecurePinModal: true, currentfile: file })
     }
+    onSharePressed(file){
+        console.log("knknkjn",file);
+        
+    }
+    getRefreshControl(data,index) {
+        return (
+            <RefreshControl refreshing={this.state.refreshing} onRefresh={() =>this.getDocumentsFromServer(data,index)} />
+        )
+    }
+
 
     render() {
         return (
@@ -207,7 +215,7 @@ class VPQ extends Component {
                     }}
                 >
                     <View style={styles.centeredView}>
-                        {this.state.isFileContentLoading
+                        {this.state.isFileLoading
                             ?
                             <View style={styles.modalView}>
                                 <ActivityIndicator />
@@ -247,45 +255,49 @@ class VPQ extends Component {
                         }
                     </View>
                 </Modal>
-
-                <View style={{ height: height(42), width: width(100), alignItems: "center", justifyContent: "center" }}>
-                    <View style={{ height: height(5), width: width(90), alignItems: "flex-start", justifyContent: 'center' }}>
-                        <Text style={{ fontFamily: "Roboto", fontSize: 18 }}>
-                            Print queue
+              
+                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
+                        <Text style={{fontFamily:"Roboto",fontSize:18}}>
+                            Current 
                         </Text>
                     </View>
-                    <View style={{ height: height(35), width: width(100), alignItems: "center", justifyContent: "center" }}>
-                        {this.state.printQueueDocumentLoading
-                            ?
-                            <ActivityIndicator size="large" color="#125DA3" />
-                            :
-                            <ScrollView>
-                                {this.state.printQueueDocument.map((file, idx) => {
-                                    return (
-                                        <FileItem key={idx} file={file} onPrintPressed={this.onPrintPressed} />
-                                    )
-                                })}
-                            </ScrollView>}
+                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    {this.state.printQueueDocumentLoading
+                    ?
+                    <ActivityIndicator  size="large" color="#125DA3"/>
+                    :
+                    <ScrollView  refreshControl={
+                        this.getRefreshControl(this.state.userdata,0)
+                    }>
+                        {this.state.printQueueDocument.map((file,idx) =>{
+                            return(
+                                <FileItem key={idx} file={file} onSharePressed={this.onSharePressed} onPrintPressed={this.onPrintPressed}/>
+                            )
+                        })}    
+                    </ScrollView>}
                     </View>
                 </View>
-                <View style={{ height: height(42), width: width(100), alignItems: "center", justifyContent: "center" }}>
-                    <View style={{ height: height(5), width: width(90), alignItems: "flex-start", justifyContent: 'center' }}>
-                        <Text style={{ fontFamily: "Roboto", fontSize: 18 }}>
-                            Printed Docuemnts
+                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
+                        <Text style={{fontFamily:"Roboto",fontSize:18}}>
+                            Printed
                         </Text>
                     </View>
-                    <View style={{ height: height(35), width: width(100), alignItems: "center", justifyContent: "center" }}>
-                        {this.state.printedDocumentLoading
-                            ?
-                            <ActivityIndicator size="large" color="#125DA3" />
-                            :
-                            <ScrollView>
-                                {this.state.printedDocument.map((file, idx) => {
-                                    return (
-                                        <FileItem key={idx} file={file} />
-                                    )
-                                })}
-                            </ScrollView>}
+                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    {this.state.printedDocumentLoading
+                    ?
+                    <ActivityIndicator  size="large" color="#125DA3"/>
+                    :
+                    <ScrollView  refreshControl={
+                        this.getRefreshControl(this.state.userdata,1)
+                    }>
+                        {this.state.printedDocument.map((file,idx) =>{
+                              return(
+                                <FileItem key={idx} file={file} onSharePressed={this.onSharePressed}   onPrintPressed={this.onPrintPressed}/>
+                            )
+                        })}    
+                    </ScrollView>}
                     </View>
                 </View>
             </View>
