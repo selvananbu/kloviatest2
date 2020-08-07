@@ -9,6 +9,8 @@ import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob'
 import RNPrint from 'react-native-print';
+import {Picker} from '@react-native-community/picker';
+import ActionSheet from 'react-native-actionsheet'
 import Share from "react-native-share";
 
 
@@ -31,7 +33,8 @@ class VPQ extends Component {
             showSecurePinModal: false,
             currentfile: '',
             pin: '',
-            userdata: ''
+            userdata: '',
+            selectedValue:'java'
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
@@ -201,7 +204,9 @@ class VPQ extends Component {
             <RefreshControl refreshing={this.state.refreshing} onRefresh={() =>this.getDocumentsFromServer(data,index)} />
         )
     }
-
+    showActionSheet = () => {
+        this.ActionSheet.show()
+      }
 
     render() {
         return (
@@ -255,14 +260,27 @@ class VPQ extends Component {
                         }
                     </View>
                 </Modal>
+                <View style={{height:height(8),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
+                
+                                    <Picker
+                    selectedValue={this.state.language}
+                    style={{height: height(6), width: width(90)}}
+                    onValueChange={(itemValue, itemIndex) =>
+                        this.setState({language: itemValue})
+                    }>
+                    <Picker.Item label="Java" value="java" />
+                    <Picker.Item label="JavaScript" value="js" />
+                    </Picker>
+                    </View>
+
               
-                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                <View style={{height:height(38),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
                         <Text style={{fontFamily:"Roboto",fontSize:18}}>
                             Current 
                         </Text>
                     </View>
-                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    <View style={{height:height(33),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     {this.state.printQueueDocumentLoading
                     ?
                     <ActivityIndicator  size="large" color="#125DA3"/>
@@ -278,13 +296,13 @@ class VPQ extends Component {
                     </ScrollView>}
                     </View>
                 </View>
-                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                <View style={{height:height(38),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
                         <Text style={{fontFamily:"Roboto",fontSize:18}}>
                             Printed
                         </Text>
                     </View>
-                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    <View style={{height:height(33),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     {this.state.printedDocumentLoading
                     ?
                     <ActivityIndicator  size="large" color="#125DA3"/>
