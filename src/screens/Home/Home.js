@@ -1,8 +1,8 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground, ActivityIndicator,ScrollView } from 'react-native';
 import { width, height } from 'react-native-dimension';
-import { TouchableNativeFeedback, TouchableOpacity, ScrollView } from 'react-native-gesture-handler';
+import { TouchableNativeFeedback, TouchableOpacity,  } from 'react-native-gesture-handler';
 import { Dimensions } from "react-native";
 import FileItem from '../component/FileItem';
 import base64 from 'react-native-base64';
@@ -89,21 +89,17 @@ class Home extends Component {
         }
     }
     
-    loadUserData = async () => {
-        try {
-            const value = await AsyncStorage.getItem('com.processfusion.userdata');
-            console.log(this.props)
-            if (value !== null) {
-                var data = JSON.parse(value);
-                this.getVPQData(data);
-                this.setState({ userdata: data })
-            }
-            else {
-                // this.setState({isloading:false})
-            }
-        } catch (e) {
-            // error reading value
+    loadUserData(){
+        const value = this.props.userdata.userdata;
+        if (value !== null) {
+            var data = value;
+            this.getVPQData(data);
+            this.setState({ userdata: data })
         }
+        else {
+            // this.setState({isloading:false})
+        }
+    
     }
 
     componentDidMount() {
@@ -173,7 +169,7 @@ class Home extends Component {
                             </ScrollView>
 
                         </View>
-                        <View style={{ width: width(95), height: height(16), alignItems: "center", justifyContent: "center" }}>
+                        <View style={{ width: width(95), height: height(22), alignItems: "center", justifyContent: "center" }}>
                             {this.state.recentdocs.length > 0
                                 ?
                                 <ScrollView showsVerticalScrollIndicator={false}>
@@ -185,7 +181,7 @@ class Home extends Component {
                                 </ScrollView>
                                 :
                                 <Text>
-                                    No Recent Files....
+                                    {this.state.recentdocs.length === 0 ? "Loading Recent files" : " No Recenet Files"}
                         </Text>
                             }
                         </View>
@@ -208,7 +204,7 @@ const styles = StyleSheet.create({
 });
 function mapStateToProps(state) {
     return {
-        userdata: state.userdata,
+        userdata: state.Credentials,
 
     };
 }

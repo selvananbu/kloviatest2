@@ -6,6 +6,8 @@ import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import MainApiClient_proximitydevice from '../../api/proximitydeviceapi'
+ 
 
 const axios = require('axios');
 
@@ -19,23 +21,35 @@ class Printer extends Component {
             isloadingPrinters:true
         }
     }
+
+    callbackProximityPrinters(response){
+        console.log(response)
+        if (response.status === 200) {
+            this.setState({printers:response.data,isloadingPrinters:false})
+        }
+    }
+
     getPrintersFromServer(){
         var accesstoken = this.props.userdata.userdata.AccessToken;
+        // console.log(accesstoken, 'sadsad')
+        
         if(accesstoken !== undefined){
-         axios({
-            method: 'get',
-            url: "https://infinitycloudadmin.uniprint.net/api/proximitydevices/printers/mappable",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${accesstoken}`
-            }
-        }).then(response => {
-            console.log(response)
-            if (response.status === 200) {
-                this.setState({printers:response.data,isloadingPrinters:false})
-            }
 
-        });
+            new MainApiClient_proximitydevice().GET_proximitydevice_printers_mappable(this.callbackProximityPrinters.bind(this));
+        //  axios({
+        //     method: 'get',
+        //     url: "https://infinitycloudadmin.uniprint.net/api/proximitydevices/printers/mappable",
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //         Authorization: `Bearer ${accesstoken}`
+        //     }
+        // }).then(response => {
+        //     console.log(response)
+        //     if (response.status === 200) {
+        //         this.setState({printers:response.data,isloadingPrinters:false})
+        //     }
+
+        // });
         }
     }
     componentDidMount(){

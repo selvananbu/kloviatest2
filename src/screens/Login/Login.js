@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ToastAndroid, I
 import { width, height } from 'react-native-dimension';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
-import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
+// import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
@@ -32,14 +32,13 @@ class Login extends Component {
   
     componentDidMount() {
         var self = this;
-        console.log("jbnhjbjhbjhb");
         SplashScreen.hide();
-        AppInstalledChecker
-        .isAppInstalledAndroid('uniprint')
-        .then((isInstalled) => {
-            self.checkForFirstTime(isInstalled);
+        // AppInstalledChecker
+        // .isAppInstalledAndroid('uniprint')
+        // .then((isInstalled) => {
+            self.checkForFirstTime(false);
 
-        });
+        // });
     }
 
     checkForLogin = async () => {
@@ -64,6 +63,12 @@ class Login extends Component {
         }
     }
 
+    componentDidUpdate(prevProps){
+        if ( prevProps.userdata.userdata !== this.props.userdata.userdata ) {
+            this.props.navigation.navigate("Home");
+        }
+    }
+
     checkForFirstTime = async (isInstalled) => {
 
         try {
@@ -71,7 +76,8 @@ class Login extends Component {
             console.log(value, 'sadasd')
             if (value !== null) {
                 // this.checkForLogin()
-                this.props.navigation.navigate("Home");
+                const userData = await AsyncStorage.getItem('com.processfusion.userdata');
+                this.props.setUserCredentials(JSON.parse(userData))
 
             }
             else {

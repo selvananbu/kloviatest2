@@ -16,8 +16,6 @@ export const ensureAccessTokenIsValid = (functionAfterTokenisValid) => {
         var isValid = checkAccessTokenIsValid(accessToken);
         var promisesToMake = null;
         if (!isValid) {
-            
-            console.log("-------------- Refresh authentication --------------")
             promisesToMake = [refreshAuth(currentData)];
             
             Promise.all(promisesToMake)

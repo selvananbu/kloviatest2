@@ -38,7 +38,7 @@ class FileItem extends React.PureComponent {
 
         return (
 
-            <TouchableOpacity style={{ width: width(90), height: height(6), alignItems: "center", justifyContent: 'center', borderWidth: 1, borderColor: "rgba(14, 70, 121,0.1)", marginBottom: height(1), flexDirection: "row" }}>
+            <TouchableOpacity style={{ width: width(90), height: height(9), alignItems: "center", justifyContent: 'center', borderWidth: 1, borderColor: "rgba(14, 70, 121,0.1)", marginBottom: height(1), flexDirection: "row" }}>
                 <View style={{ width: width(20), height: height(6), alignItems: "center", justifyContent: "center" ,flexDirection:"row"}}>
                     <Image source={this.getFileImage(file.DocumentName)} style={{ width: width(8), height: height(5) }} resizeMode="contain" />
                     {file.Pin

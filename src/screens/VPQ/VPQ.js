@@ -85,7 +85,7 @@ class VPQ extends Component {
     loadUserData(){
         try {
             var self = this;
-            // console.log(this.props.userdata.userdata, 'asd');
+            console.log(this.props.userdata.userdata, 'asd');
             const value = this.props.userdata.userdata;
             // const value = await AsyncStorage.getItem('com.processfusion.userdata');
             if (value !== null) {
