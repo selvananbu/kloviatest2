@@ -9,6 +9,8 @@ import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob'
 import RNPrint from 'react-native-print';
+import {Picker} from '@react-native-community/picker';
+import ActionSheet from 'react-native-actionsheet'
 import Share from "react-native-share";
 
 
@@ -35,7 +37,9 @@ class VPQ extends Component {
             showSecurePinModal: false,
             currentfile: '',
             pin: '',
-            userdata: ''
+            userdata: '',
+            selectedValue:'java',
+            printerType:'local'
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
@@ -107,36 +111,6 @@ class VPQ extends Component {
             var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
 
             new MainApiClient_document().GET_printJobsPrintFile(this.downLoadPrintFile.bind(this), body, accesstoken)
-
-            // RNFetchBlob.fetch('POST', url, {
-            //     "Authorization": `Bearer ${accesstoken}`,
-
-            //     'Content-Type': 'application/json',
-            //     'Accept': 'application/pdf',
-            // }, JSON.stringify(body))
-            // .then((resp) => {
-            //     if(resp.data !== "Get print job file failed!: Invalid username and/or password!"){
-            //         var responseData = resp.data;
-            //         const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
-            //         var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
- 
-            //         // write the file
-            //         RNFS.writeFile(path, responseData, 'base64')
-            //         .then((success) => {
-            //             this.printRemotePDF(file_path)
-            //             this.setState({isFileLoading:false})
-            //         })
-            //         .catch((err) => {
-            //             console.log(err.message);
-            //         });
-            //     }
-            //     else{
-            //         this.setState({showSecurePinModal:false})    
-            //         ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
-            //         this.setState({isFileLoading:false,pin:''})
-            //     }
-                
-            // })
           }
     }
 
@@ -204,7 +178,9 @@ class VPQ extends Component {
             <RefreshControl refreshing={this.state.refreshing} onRefresh={() =>this.getDocumentsFromServer(data,index)} />
         )
     }
-
+    showActionSheet = () => {
+        this.ActionSheet.show()
+      }
 
     render() {
         return (
@@ -258,19 +234,37 @@ class VPQ extends Component {
                         }
                     </View>
                 </Modal>
+                <View style={{height:height(8),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
+                <Text style={{fontFamily:"Roboto",fontSize:12,color:"#125DA3"}}>
+                            Type of Printing 
+                        </Text>
+                
+                <View style={{borderBottomWidth:1,borderBottomColor:"#125DA3",height:height(7),alignItems:"center",justifyContent:"center"}}>
+                                    <Picker
+                    selectedValue={this.state.printerType}
+                    style={{height: height(6), width: width(90)}}
+                    onValueChange={(itemValue, itemIndex) =>
+                        this.setState({printerType: itemValue})
+                    }>
+                    <Picker.Item label="Local Printer" value="local" />
+                    <Picker.Item label="Cloud Printer" value="cloud" />
+                    </Picker>
+                    </View>
+                    </View>
+
               
-                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
                         <Text style={{fontFamily:"Roboto",fontSize:18}}>
                             Current 
                         </Text>
                     </View>
-                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    <View style={{height:height(30),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     {this.state.printQueueDocumentLoading
                     ?
                     <ActivityIndicator  size="large" color="#125DA3"/>
                     :
-                    <ScrollView  refreshControl={
+                    <ScrollView showsVerticalScrollIndicator={false}  refreshControl={
                         this.getRefreshControl(this.state.userdata,0)
                     }>
                         {this.state.printQueueDocument.map((file,idx) =>{
@@ -281,18 +275,18 @@ class VPQ extends Component {
                     </ScrollView>}
                     </View>
                 </View>
-                <View style={{height:height(42),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
                         <Text style={{fontFamily:"Roboto",fontSize:18}}>
                             Printed
                         </Text>
                     </View>
-                    <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
+                    <View style={{height:height(30),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     {this.state.printedDocumentLoading
                     ?
                     <ActivityIndicator  size="large" color="#125DA3"/>
                     :
-                    <ScrollView  refreshControl={
+                    <ScrollView showsVerticalScrollIndicator={false}    refreshControl={
                         this.getRefreshControl(this.state.userdata,1)
                     }>
                         {this.state.printedDocument.map((file,idx) =>{

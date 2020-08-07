@@ -13,6 +13,12 @@ class FileItem extends React.PureComponent {
         else if (extension === "pdf") {
             return require("../../image/pdficon.png");
         }
+        else if (extension === "txt") {
+            return require("../../image/text.png");
+        }
+        else{
+            return require("../../image/file.png"); 
+        }
     }
 
     onPrintPressed(file) {
@@ -29,11 +35,18 @@ class FileItem extends React.PureComponent {
     
     render() {
         var file = this.props.file;
+
         return (
 
             <TouchableOpacity style={{ width: width(90), height: height(6), alignItems: "center", justifyContent: 'center', borderWidth: 1, borderColor: "rgba(14, 70, 121,0.1)", marginBottom: height(1), flexDirection: "row" }}>
-                <View style={{ width: width(20), height: height(6), alignItems: "center", justifyContent: "center" }}>
+                <View style={{ width: width(20), height: height(6), alignItems: "center", justifyContent: "center" ,flexDirection:"row"}}>
                     <Image source={this.getFileImage(file.DocumentName)} style={{ width: width(8), height: height(5) }} resizeMode="contain" />
+                    {file.Pin
+                    ?
+                    <Image source={require("../../image/lock.png")} style={{ width: width(5), height: height(3),position:"absolute",bottom:0,left:45 }} resizeMode="contain" />
+                    :
+                    <View/>
+                    }
                 </View>
                 <View style={{ width: width(40), height: height(6), alignItems: "flex-start", justifyContent: "center", flexDirection: "column" }}>
                     <Text style={{ fontSize: 14, fontFamily: "Roboto", color: "#3A3A3A" }}>

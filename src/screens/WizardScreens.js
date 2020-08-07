@@ -21,13 +21,12 @@ class WizardScreens extends Component {
 
        }
     render() {
-        console.log('sadasdasd', this.props)
         var index = this.state.index;
         return (
             <View style={styles.container}>
                 <ScrollView horizontal={true} pagingEnabled={true} showsHorizontalScrollIndicator={false} onScroll={this.handleScroll} >
                     <Welcome navigation={this.props.navigation}/>
-                    <InstallPlugin/>
+                    <InstallPlugin isPluginInstalled={this.props.route.params.param}/>
                 </ScrollView>
                 <View style={{width:width(100),height:height(10),alignItems:"center",justifyContent:"center"}}>
                     <View style={{width:width(20),height:height(10),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>

@@ -162,11 +162,6 @@ class Home extends Component {
                             <Text style={{ fontSize: 12, fontFamily: "Roboto" }}>
                                 Sync Accounts
                         </Text>
-
-                            <Text style={{ fontSize: 12, fontFamily: "Roboto" }}>
-                                Sync Accounts
-                        </Text>
-
                             <ScrollView showsHorizontalScrollIndicator={false} horizontal>
                                 {list.map((accounts, idx) => {
                                     return (
