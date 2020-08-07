@@ -10,6 +10,8 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 const axios = require('axios');
 
+import MainApiClient_auth from '../../api/authapi'
+
 var BASEURL = "https://infinitycloudadmin.uniprint.net/api/account/login";
 // var BASEURL = "https://inifnitycloudc-stage.azurewebsites.net/api/account/login";
 
@@ -74,52 +76,57 @@ class Login extends Component {
     }
 
     getNewToekn(data) {
-        axios({
-            method: 'post',
-            url: "https://infinitycloudadmin.uniprint.net/api/account/refreshtoken",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: {
-                AccessToken: data.AccessToken,
-                RefreshToken: data.RefreshToken,
-                Rts: data.Rts
-            }
-        }).then(response => {
-            if (response.status === 200) {
-                var data = response.data;
-                this.props.setUserCredentials(data);
-                AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
-                Toast.show('Token Refreshed...', Toast.SHORT);
-                this.props.navigation.navigate("Home", { data });
-            }
+        const body = {
+            AccessToken: data.AccessToken,
+            RefreshToken: data.RefreshToken,
+            Rts: data.Rts
+        }
+        // console.log(MainApiClient_auth, 'asdasd')
+        new MainApiClient_auth().POST_login(this.getTokenCallback.bind(this), body)
 
-        });
+    }
 
+    getTokenCallback(responseData){
+        // console.log(responseData, 'asdasd')
+        if (responseData.status === 200) {
+            var data = responseData.data;
+            this.props.setUserCredentials(data);
+            AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
+            Toast.show('Token Refreshed...', Toast.SHORT);
+            this.props.navigation.navigate("Home", { data });
+        }
     }
     
     onSignInPressed(username, password) {
-        axios({
-            method: 'post',
-            url: BASEURL,
-            headers: {
-                "Content-Type": "application/json"
-            },
-            data: {
-                UserName: username,
-                Password: password
-            }
-        }).then(response => {
 
-            if (response.status === 200) {
-                var data = response.data;
-                this.props.setUserCredentials(data);
-                AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
-                Toast.show('Successfully Logged In...', Toast.SHORT);
-                this.props.navigation.navigate("Home", { data });
-            }
+        var body = {
+            UserName: username,
+            Password: password
+        };
 
-        });
+        new MainApiClient_auth().POST_loginFirst(this.getTokenCallback.bind(this), body)
+
+        // axios({
+        //     method: 'post',
+        //     url: BASEURL,
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     },
+        //     data: {
+        //         UserName: username,
+        //         Password: password
+        //     }
+        // }).then(response => {
+        //     console.log(response)
+        //     if (response.status === 200) {
+        //         var data = response.data;
+        //         this.props.setUserCredentials(data);
+        //         AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
+        //         Toast.show('Successfully Logged In...', Toast.SHORT);
+        //         this.props.navigation.navigate("Home", { data });
+        //     }
+
+        // });
 
     }
     render() {
