@@ -71,6 +71,7 @@ class Home extends Component {
         var encodedUser = base64.encode(userdata.UserName);
 
         var self = this;
+        console.log("jknjknjknjknkj");
         if (accesstoken !== undefined) {
 
             new MainApiClient_document().GET_printJobsCurrent(this.getPrintJobsCurrentCallback.bind(this), '0', encodedUser, accesstoken)
@@ -80,6 +81,7 @@ class Home extends Component {
     }
 
     getPrintJobsCurrentCallback(response){
+        console.log("frggg",response);
         if (response.status === 200) {
             this.setState({ vpqdata: response.data.length, recentdocs: response.data })
 
@@ -91,6 +93,7 @@ class Home extends Component {
     
     loadUserData(){
         const value = this.props.userdata.userdata;
+        console.log("jknkjnkjn",value);
         if (value !== null) {
             var data = value;
             this.getVPQData(data);

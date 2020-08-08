@@ -7,6 +7,7 @@ import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import MainApiClient_proximitydevice from '../../api/proximitydeviceapi'
+import PrinterItem from './PrinterItem';
  
 
 const axios = require('axios');
@@ -72,20 +73,7 @@ class Printer extends Component {
                     :
                     <ScrollView showsVerticalScrollIndicator={false}>
                         {this.state.printers.map((printer,idx) => {
-                            return(<TouchableOpacity key={idx} style={{width:width(96),height:height(8),alignItems:"center",justifyContent:"center",marginTop:height(1),marginBottom:height(1),borderWidth:1,borderColor:"rgba(14, 70, 121, 0.1)",paddingLeft:width(4),flexDirection:"row"}}>
-                                <View style={{width:width(30),height:height(4),alignItems:"flex-start",justifyContent:"center"}}>
-                                <Image source={require("../../image/printicon.png")} style={{ width: width(8), height: height(5) }} resizeMode="contain" />
-                                </View>
-                                <View style={{width:width(60),height:height(8),alignItems:"flex-start",justifyContent:"center"}}>
-                                <Text style={{fontFamily: "Roboto",fontSize:12}}>
-                                    {printer.Name}
-                                </Text>
-                                <Text style={{fontFamily: "Roboto",fontSize:12}}>
-                                    {printer.PrinterId}
-                                </Text>
-
-                                </View>
-                            </TouchableOpacity>)
+                            return(<PrinterItem printer={printer} key={idx}/>)
                         })}
                     </ScrollView>
                     }

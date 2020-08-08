@@ -17,6 +17,7 @@ import Folder from './src/screens/Folder/Folder';
 import VPQ from './src/screens/VPQ/VPQ';
 import Printer from './src/screens/Printer/Printer';
 import Setting from './src/screens/Settings/Setting';
+import { TouchableNativeFeedback } from 'react-native-gesture-handler';
 
 function getTabIcon(label,isFocused) {
   return(
@@ -76,7 +77,7 @@ function MyTabBar({ state, descriptors, navigation }) {
         };
 
         return (
-          <TouchableOpacity
+          <TouchableNativeFeedback
             accessibilityRole="button"
             accessibilityStates={isFocused ? ['selected'] : []}
             accessibilityLabel={options.tabBarAccessibilityLabel}
@@ -91,7 +92,7 @@ function MyTabBar({ state, descriptors, navigation }) {
           >
           
            {getTabIcon(label,isFocused)}
-          </TouchableOpacity>
+          </TouchableNativeFeedback>
         );
       })}
     </SafeAreaView>

@@ -14,6 +14,7 @@ class MainApiClient_document extends MainApiClient {
     GET_printJobsCurrent(callback, index, currentUser){
         var self = this;
         ensureAccessTokenIsValid(function(accessToken){
+            console.log(":hjkbhjb");
             try {
                 const config = {
                     url: self.getUrl(['printjobs', index, currentUser]),

@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ToastAndroid, I
 import { width, height } from 'react-native-dimension';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
-// import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
+import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
@@ -73,11 +73,20 @@ class Login extends Component {
 
         try {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
-            console.log(value, 'sadasd')
+          
             if (value !== null) {
                 // this.checkForLogin()
                 const userData = await AsyncStorage.getItem('com.processfusion.userdata');
-                this.props.setUserCredentials(JSON.parse(userData))
+              
+                if(userData === null){
+                    this.setState({isloading:false})
+                    this.props.navigation.navigate("Login")
+                }
+                else{
+                    this.props.setUserCredentials(JSON.parse(userData))
+                    this.props.navigation.navigate("Home")
+                }
+                
 
             }
             else {
