@@ -1,6 +1,6 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator,Modal,TextInput,TouchableOpacity,PermissionsAndroid,Alert, ToastAndroid , RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator,Modal,TextInput,TouchableOpacity,PermissionsAndroid,Alert, ToastAndroid , RefreshControl,Image } from 'react-native';
 import { height,width } from 'react-native-dimension';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as Action from '../../action/index';
@@ -10,7 +10,8 @@ import { ScrollView } from 'react-native-gesture-handler';
 import RNFetchBlob from 'rn-fetch-blob'
 import RNPrint from 'react-native-print';
 import {Picker} from '@react-native-community/picker';
-import ActionSheet from 'react-native-actionsheet'
+// import ActionSheet from 'react-native-actionsheet'
+import Actionsheet from 'react-native-enhanced-actionsheet'
 import Share from "react-native-share";
 
 
@@ -18,12 +19,15 @@ import base64 from 'react-native-base64';
 import FileItem from '../component/FileItem';
 
 import MainApiClient_document from '../../api/documentapi'
+import ClooudPrinter from './CloudPrinterModel';
 
 const axios = require('axios');
 var RNFS = require('react-native-fs');
 
+ 
 
-var BASEURL = "https://infinitycloudadmin.uniprint.net/api/printjobs";
+ 
+
 // create a component
 class VPQ extends Component {
     constructor(props) {
@@ -38,29 +42,57 @@ class VPQ extends Component {
             currentfile: '',
             pin: '',
             userdata: '',
-            selectedValue:'java',
-            printerType:'local'
+            selectedValue:"0",
+            printerType:'local',
+            visible: false,
+            actionsheetoptions:[],
+            selected: 0,
+            renderStation:'',
+            showPrintDialog:false,
+            selectedbin:null,
+            bins:[],
+            startPage:0,
+            endPage:0,
+            orientation:[{label:"landscape",value:0},{label:"portrait",value:1}],
+            color:[{label:"Black & White",value:0},{label:"Color",value:1}],
+            duplex:[{label:"1 - Sided",value:0},{label:"2 - Sided",value:1}],
+            selectedOrientation:1,
+            copies:0,
+            selectedColor:1,
+            collate:0,
+            selectedduplex:0
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
+        this.onActionSheetSelected = this.onActionSheetSelected.bind(this);
     }
     
     componentDidMount() {
         this.loadUserData();
     }
 
+    getOptions(){
+        var COUNT = 0
+        var OPTIONS = [];
+        
+        if(this.props.userdata.favouriteprinters.length !== undefined){
+          this.props.userdata.favouriteprinters.map((printer,idx) =>{
+              OPTIONS.push({id:idx,label:printer.Name.length > 18 ? printer.Name.substring(0,17)+"..." : printer.Name,printer:printer})
+          })
+        }
+        
+        
+        return OPTIONS;
+    }
+
     getPrintJobsCurrentCallback(index, response){
         console.log(response, 'response')
         if (response.status === 200) {
-            // console.log("respinse",response);
             if(index === 0){
-                    ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
                     this.setState({printQueueDocument:response.data,printQueueDocumentLoading:false,refreshing:false})
             }
             else{
-                ToastAndroid.show("Refereshed Sucessfully...",ToastAndroid.SHORT)
                 this.setState({printedDocument:response.data,printedDocumentLoading:false,refreshing:false})
-                
             }
         }
         else {
@@ -85,7 +117,6 @@ class VPQ extends Component {
     loadUserData(){
         try {
             var self = this;
-            console.log(this.props.userdata.userdata, 'asd');
             const value = this.props.userdata.userdata;
             // const value = await AsyncStorage.getItem('com.processfusion.userdata');
             if (value !== null) {
@@ -104,17 +135,18 @@ class VPQ extends Component {
     onSubmitPressed() {
         this.setState({ showSecurePinModal: false,isFileLoading:true });
         ToastAndroid.show("Loading File...",ToastAndroid.SHORT)
-        // console.log(new MainApiClient_document(), 'sadasd')
         var accesstoken = this.state.userdata.AccessToken;
-        // console.log(accesstoken)
+        
         if (accesstoken !== undefined) {
             var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
-
             new MainApiClient_document().GET_printJobsPrintFile(this.downLoadPrintFile.bind(this), body, accesstoken)
           }
+          
     }
 
+
     downLoadPrintFile(resp){
+        console.log("jknkjnjknj",resp);
         if(resp.data !== "Get print job file failed!: Invalid username and/or password!" && resp.data !== ""){
             var responseData = resp.data;
             // const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
@@ -166,7 +198,6 @@ class VPQ extends Component {
     }
 
     onPrintPressed(file) {
-        // console.log("knknkjn", file);
         this.setState({ showSecurePinModal: true, currentfile: file })
     }
     onSharePressed(file){
@@ -179,18 +210,77 @@ class VPQ extends Component {
         )
     }
     showActionSheet = () => {
-        this.ActionSheet.show()
+        if(this.props.userdata.favouriteprinters === {}){
+            ToastAndroid.show("No Favoutite Printers available...",ToastAndroid.SHORT);
+            return;
+        }
+        else{
+            this.ActionSheet.show()
+        }
+        
+      }
+
+      onActionSheetSelected(e){
+        this.setState({visible: false, selected: e.id})
+        var accesstoken = this.state.userdata.AccessToken;
+       var self = this;
+        if (accesstoken !== undefined){
+        axios({
+            method: 'get',
+            url: 'https://infinitycloudadmin.uniprint.net/api/renderstations/mobile/release/printer/' + e.printer.PrinterId,
+            headers: {
+                Authorization: `Bearer ${accesstoken}`
+            }
+          })
+            .then(function (response) {
+            if(response.status === 200){
+                ToastAndroid.show("Render Station Available for the Printer...",ToastAndroid.SHORT);
+                // self.getBins();
+                var list  = [];
+                response.data.Bins.map((bin) => {
+                    list.push({label:bin.Name,value:bin.BinId})
+                })
+                self.setState({showPrintDialog:true,renderStation:response.data,bins:list,selectedbin:list[0].value})
+            }
+            else{
+                    ToastAndroid.show("No stations mapped to printers..",ToastAndroid.SHORT);
+            }
+             
+            });
+        }
+        
+      }
+      getBins(){
+          var list  = [];
+          if(this.state.renderStation !== "" && this.state.renderStation.Bins !== []){
+                this.state.renderStation.Bins.map((bin) => {
+                    
+                    list.push({label:bin.Name,value:bin.BinId})
+                })
+                this.setState({bins:list,selectedbin:list[0].value})
+          }
       }
 
     render() {
+        const selectedOption = this.getOptions().find((e) => e.id === this.state.selected)
         return (
             <View style={styles.container}>
+                <Modal
+            animationType="slide"
+            transparent={true}
+            visible={this.state.showPrintDialog}
+            onRequestClose={() => {
+                this.setState({showPrintDialog:false})
+            }}
+        >
+               <ClooudPrinter showPrintDialog={this.state.showPrintDialog} bins={this.state.bins} selectedbin={this.state.selectedbin} renderStation={this.state.renderStation}/>
+               </Modal>
                 <Modal
                     animationType="slide"
                     transparent={true}
                     visible={this.state.showSecurePinModal}
                     onRequestClose={() => {
-                        Alert.alert("Modal has been closed.");
+                        this.setState({showSecurePinModal:false})
                     }}
                 >
                     <View style={styles.centeredView}>
@@ -234,7 +324,8 @@ class VPQ extends Component {
                         }
                     </View>
                 </Modal>
-                <View style={{height:height(8),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
+                <View style={{flexDirection:"row"}}>
+                <View style={{height:height(8),width:this.state.printerType === "local" ? width(90) : width(75),alignItems:"flex-start",justifyContent:'center'}}>
                 <Text style={{fontFamily:"Roboto",fontSize:12,color:"#125DA3"}}>
                             Type of Printing 
                         </Text>
@@ -242,7 +333,7 @@ class VPQ extends Component {
                 <View style={{borderBottomWidth:1,borderBottomColor:"#125DA3",height:height(7),alignItems:"center",justifyContent:"center"}}>
                                     <Picker
                     selectedValue={this.state.printerType}
-                    style={{height: height(6), width: width(90)}}
+                    style={{height: height(6), width:this.state.printerType === "local" ? width(90) : width(75)}}
                     onValueChange={(itemValue, itemIndex) =>
                         this.setState({printerType: itemValue})
                     }>
@@ -251,6 +342,29 @@ class VPQ extends Component {
                     </Picker>
                     </View>
                     </View>
+                    {this.state.printerType === "local"
+                    ?
+                    <View/>
+                    :
+                    <View style={{width:width(15)}}>
+       
+        <TouchableOpacity style={{width:width(13),alignItems:"center",justifyContent:"center",height:height(8)}}  onPress={() => this.setState({visible: true})}>
+        <Image source={require("../../image/cloudprint.png")} style={{ width: width(12), height: height(8) }} resizeMode="contain" />
+        </TouchableOpacity>
+       
+        <Actionsheet 
+          visible={this.state.visible}
+          data={this.getOptions()} 
+          title={'Select your Favourite Cloud Printer'}
+          selected={this.state.selected}
+          selectedOptionTextStyle={{color:"#fff",fontWeight:"bold"}}
+          selectedOptionContainerStyle={{backgroundColor:"#90c2f0",height:height(6),alignItems:"center",justifyContent:"center"}}
+          onOptionPress={(e) => this.onActionSheetSelected(e)}
+          onCancelPress={() => this.setState({visible: false})}
+        />
+      </View>
+    }
+      </View>
 
               
                 <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
@@ -336,6 +450,24 @@ const styles = StyleSheet.create({
         // padding: 5,
         width: width(65),
         height: height(22),
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5
+    },
+    modalViewPrint: {
+        marginTop:height(20),
+        marginLeft:width(8),
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        // padding: 5,
+        width: width(85),
+        height: height(60),
         alignItems: "center",
         shadowColor: "#000",
         shadowOffset: {

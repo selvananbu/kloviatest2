@@ -4,3 +4,9 @@ export const setUserCredentials = (value) => {
     payload: value
   }
 };
+export const setFavouritePrinters = (value) => {
+  return{
+    type: "SETFAVOURITEPRINTERS",
+    payload: value
+  }
+};

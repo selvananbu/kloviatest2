@@ -18,6 +18,8 @@ import VPQ from './src/screens/VPQ/VPQ';
 import Printer from './src/screens/Printer/Printer';
 import Setting from './src/screens/Settings/Setting';
 import { TouchableNativeFeedback } from 'react-native-gesture-handler';
+import Connector from './src/screens/Connector/Connector';
+import { log } from 'react-native-reanimated';
 
 function getTabIcon(label,isFocused) {
   return(
@@ -106,14 +108,15 @@ function ChatStack(){
     <Stack.Navigator screenOptions={{
       headerShown: false
     }}>
-        <Stack.Screen name="Chat" component={Chat} />
+        <Stack.Screen name="Connector" component={Connector} />
         <Stack.Screen name="Test" component={Test} />
     </Stack.Navigator>
   )
 }
-const getSettingsIcon = () => {
+const getSettingsIcon = (navigation) => {
+  console.log("klmlkmlkm",navigation);
   return(
-    <TouchableOpacity style={{width:width(10),alignItems:"center",justifyContent:"center"}} onPress={() => this.props.navigation.navigate("Setting")}>
+    <TouchableOpacity style={{width:width(10),alignItems:"center",justifyContent:"center"}} onPress={() => navigation.navigate("Setting")}>
     <Image source={require("./src/image/settingicon.png")} style={{width:width(5),height:height(5)}} resizeMode="contain"/>
     </TouchableOpacity>
   )
@@ -139,11 +142,13 @@ export default function Root() {
     <NavigationContainer>
     <Stack.Navigator>
           <Stack.Screen name="Login" component={Login}  options={{headerShown:false}} type="reset"/>
-          <Stack.Screen name="Home" component={HomeTabs} options={{title:"Klovia",headerLeft:null,headerRight:getSettingsIcon}} type="reset"/>
-          <Stack.Screen name="Setting" component={Setting}  options={{headerShown:false}} type="reset"/>
-          
+          <Stack.Screen name="Home" component={HomeTabs}   options={({ navigation, route }) => ({
+          headerRight: props => getSettingsIcon(navigation),
+          headerLeft:null,
+          title:"Klovia"
+        })} type="reset"/>
+         <Stack.Screen name="Setting" component={Setting}  options={{headerShown:true,title:"About Us"}} type="reset"/>
           <Stack.Screen name="WizardScreens" component={WizardScreens}  options={{headerShown:false}} type="reset"/>
-          
     </Stack.Navigator>
     </NavigationContainer>
   );

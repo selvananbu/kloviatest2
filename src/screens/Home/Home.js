@@ -65,6 +65,21 @@ class Home extends Component {
             recentdocs: []
         }
     }
+    
+    static navigationOptions = ({ navigation }) => {
+   
+        return {
+          headerTitle: "Title",
+          headerLeft: (
+            <TouchableOpacity transparent
+           >
+           <Icon name='menu' 
+           onPress={() => navigation.navigate('DrawerScreen')}
+           />
+           </TouchableOpacity>
+          ),
+        };
+      };
 
     getVPQData(userdata) {
         var accesstoken = userdata.AccessToken;

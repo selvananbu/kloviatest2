@@ -6,6 +6,7 @@ import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
 import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import AsyncStorage from '@react-native-community/async-storage';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
@@ -24,7 +25,8 @@ class Login extends Component {
         this.state = {
             username: '',
             password: '',
-            isloading: true
+            isloading: true,
+            isSecurePassword:true
         }
         this.checkForLogin = this.checkForLogin.bind(this);
         this.checkForFirstTime = this.checkForFirstTime.bind(this);
@@ -39,6 +41,10 @@ class Login extends Component {
             self.checkForFirstTime(false);
 
         // });
+    }
+
+    showPassword(){
+        this.setState({isSecurePassword:!this.state.isSecurePassword})
     }
 
     checkForLogin = async () => {
@@ -130,29 +136,6 @@ class Login extends Component {
         };
 
         new MainApiClient_auth().POST_loginFirst(this.getTokenCallback.bind(this), body)
-
-        // axios({
-        //     method: 'post',
-        //     url: BASEURL,
-        //     headers: {
-        //         "Content-Type": "application/json"
-        //     },
-        //     data: {
-        //         UserName: username,
-        //         Password: password
-        //     }
-        // }).then(response => {
-        //     console.log(response)
-        //     if (response.status === 200) {
-        //         var data = response.data;
-        //         this.props.setUserCredentials(data);
-        //         AsyncStorage.setItem("com.processfusion.userdata", JSON.stringify(data));
-        //         Toast.show('Successfully Logged In...', Toast.SHORT);
-        //         this.props.navigation.navigate("Home", { data });
-        //     }
-
-        // });
-
     }
     render() {
 
@@ -187,11 +170,14 @@ class Login extends Component {
                                     <View style={{ height: height(8), borderBottomWidth: 1, borderBottomColor: "#a7a7a7", width: width(86), flexDirection: "row" }}>
                                         <View style={{ width: width(25), height: height(8), alignItems: "center", justifyContent: "center" }}>
                                             <Text style={{ color: "#315b91", fontSize: 16 }}>
-                                                Passowrd
+                                                Password
                 </Text>
                                         </View>
-                                        <View style={{ width: width(60), height: height(8), alignItems: "center", justifyContent: "center" }} >
-                                            <TextInput secureTextEntry={true} placeholder="********" secureTextEntry={true} style={{ width: width(48), height: height(8), color: "#000", fontSize: 16 }} onChangeText={(text) => this.setState({ password: text })} />
+                                        <View style={{ width: width(60), height: height(8), alignItems: "center", justifyContent: "center" ,flexDirection:"row"}} >
+                                            <TextInput secureTextEntry={true} placeholder="********" secureTextEntry={this.state.isSecurePassword} style={{ width: width(38), height: height(8), color: "#000", fontSize: 16 }} onChangeText={(text) => this.setState({ password: text })} />
+                                            <TouchableOpacity style={{height:height(8),alignItems:"center",justifyContent:"center"}} onPress={this.showPassword.bind(this)}>
+                                                <Image source={!this.state.isSecurePassword?require("../../image/eye.png") : require("../../image/hidden.png") } style={{width:width(8),height:height(8)}} resizeMode="contain"/>
+                                            </TouchableOpacity>
                                         </View>
                                     </View>
                                 </View>

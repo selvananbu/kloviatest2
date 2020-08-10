@@ -4,7 +4,7 @@ import { View, Text, StyleSheet,TouchableOpacity,Image } from 'react-native';
 import { height,width } from 'react-native-dimension';
 
 // create a component
-class PrinterItem extends Component {
+class FavouritePrinterItem extends Component {
 
     constructor(props){
         super(props)
@@ -21,7 +21,8 @@ class PrinterItem extends Component {
         }
         else if(name.includes("xerox")){
             imgPath = require("../../image/hp.png"); 
-        } else if(name.includes("samsung")){
+        }
+        else if(name.includes("samsung")){
             imgPath = require("../../image/samsung.png"); 
         }
         else{
@@ -48,17 +49,17 @@ class PrinterItem extends Component {
         var printer = this.props.printer;
         
         return (
-            <TouchableOpacity style={{width:width(96),height:height(14),alignItems:"center",justifyContent:"center",marginTop:height(1),marginBottom:height(1),borderWidth:1,borderColor:"rgba(14, 70, 121, 0.1)",paddingLeft:width(4),flexDirection:"column"}}>
-                <View style={{width:width(80),height:height(8),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>
-                <View style={{width:width(72),height:height(8),alignItems:"flex-start",justifyContent:"center"}}>
-            <View style={{width:width(70),height:height(4),flexDirection:"row"}}>
-            <View style={{width:width(50),alignItems:"flex-start",justifyContent:"center",height:height(4)}}>
+            <TouchableOpacity style={{width:width(65),height:height(14),alignItems:"center",justifyContent:"center",borderWidth:1,marginRight:width(5),marginLeft:width(5),borderColor:"rgba(14, 70, 121, 0.1)",paddingLeft:width(4),flexDirection:"column"}}>
+                <View style={{width:width(60),height:height(8),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>
+                <View style={{width:width(55),height:height(8),alignItems:"flex-start",justifyContent:"center"}}>
+            <View style={{width:width(60),height:height(4),flexDirection:"row"}}>
+            <View style={{width:width(45),alignItems:"flex-start",justifyContent:"center",height:height(4)}}>
             <Text style={{fontFamily: "Roboto",fontSize:14,fontWeight:"bold"}}>
                 {printer.Name.length > 22 ? printer.Name.substring(0,22)+"..." : printer.Name}
             </Text>
             </View>
             <View style={{height:height(4),alignItems:"center",justifyContent:"center"}}>
-            <TouchableOpacity style={{width:width(12),height:height(2),alignItems:"center",justifyContent:"center",backgroundColor:"#E8F0F7",borderRadius:12}}>
+            <TouchableOpacity style={{width:width(10),height:height(2),alignItems:"center",justifyContent:"center",backgroundColor:"#E8F0F7",borderRadius:12}}>
             <Text style={{fontFamily: "Roboto",fontSize:10}}>
                 Status
             </Text>
@@ -78,7 +79,7 @@ class PrinterItem extends Component {
 
             </View>
 
-            <View style={{height:height(6),width:width(80),alignItems:"flex-start",justifyContent:"center"}}>
+            <View style={{height:height(6),width:width(60),alignItems:"flex-start",justifyContent:"center"}}>
             <Image source={this.getPrinter(printer)} style={{ width: width(8), height: height(6) }} resizeMode="contain" />
             </View>
       
@@ -98,4 +99,4 @@ const styles = StyleSheet.create({
 });
 
 //make this component available to the app
-export default PrinterItem;
+export default FavouritePrinterItem;

@@ -46,7 +46,6 @@ class MainApiClient_document extends MainApiClient {
         var self = this;
         ensureAccessTokenIsValid(function(accessToken){
             try {
-
                 RNFetchBlob.fetch('POST', self.getUrl(['printjobs', 'file']), {
                     "Authorization": `Bearer ${accessToken}`,
     
