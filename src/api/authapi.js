@@ -7,10 +7,10 @@ class MainApiClient_auth extends MainApiClient {
         super()
     }
 
-    POST_loginFirst(callback, body = {}){
+    async POST_loginFirst(callback, body = {}){
         try {
             const config = {
-                url: this.getUrl(['account', 'login']),
+                url: await this.getUrl(['account', 'login']),
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json'
@@ -20,11 +20,12 @@ class MainApiClient_auth extends MainApiClient {
             console.log(config)
             return axios.request(config)
             .then(function(response) {
-    
+            console.log(response)
+                
                 callback(response);
             })
             .catch(function(err) {
-                console.log(err, 'asdasdasdsad');
+                console.log(err, 'error');
                 callback(err);
             })
             
@@ -35,10 +36,10 @@ class MainApiClient_auth extends MainApiClient {
 
     }
 
-    POST_login(callback, body = {}){
+    async POST_login(callback, body = {}){
         try {
             const config = {
-                url: this.getUrl(['account', 'refreshtoken']),
+                url: await this.getUrl(['account', 'refreshtoken']),
                 method: 'post',
                 headers: {
                     'Content-Type': 'application/json'

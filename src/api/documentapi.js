@@ -13,10 +13,10 @@ class MainApiClient_document extends MainApiClient {
     
     GET_printJobsCurrent(callback, index, currentUser){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
                 const config = {
-                    url: self.getUrl(['printjobs', index, currentUser]),
+                    url: await self.getUrl(['printjobs', index, currentUser]),
                     method: 'get',
                     headers: {
                         Authorization: `Bearer ${accessToken}`
@@ -43,9 +43,9 @@ class MainApiClient_document extends MainApiClient {
 
     GET_availableRenderStationForPrinter(callback,printerId){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
-                RNFetchBlob.fetch('GET', self.getUrl(['renderstations','mobile','release','printer',printerId]), {
+                RNFetchBlob.fetch('GET', await self.getUrl(['renderstations','mobile','release','printer',printerId]), {
                     "Authorization": `Bearer ${accessToken}`,
                 })
                 .then(function(response) {
@@ -67,9 +67,9 @@ class MainApiClient_document extends MainApiClient {
 
     GET_printJobsPrintFile(callback, body = {}){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
-                RNFetchBlob.fetch('POST', self.getUrl(['printjobs', 'file']), {
+                RNFetchBlob.fetch('POST', await self.getUrl(['printjobs', 'file']), {
                     "Authorization": `Bearer ${accessToken}`,
     
                     'Content-Type': 'application/json',

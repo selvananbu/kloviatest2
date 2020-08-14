@@ -19,6 +19,7 @@ export default function (state = initial, action) {
       }
       break;
   }
+  console.log(state, 'satete')
   return state;
 }
 

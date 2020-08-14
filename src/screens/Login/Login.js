@@ -14,15 +14,15 @@ import { connect } from 'react-redux';
 const axios = require('axios');
 
 import MainApiClient_auth from '../../api/authapi'
-var DEFAULT_BASEURL = "https://infinitycloudadmin.uniprint.net"
+var DEFAULT_BASEURL = "https://infinitycloudadmin.uniprint.net/api"
 // create a component
 class Login extends Component {
 
     constructor(props) {
         super(props);
         this.state = {
-            username: 'anbu.selvan@dezzex.com',
-            password: 'Raji@3091992',
+            username: '',
+            password: '',
             isloading: true,
             isSecurePassword:true,
             status:'active',
@@ -52,9 +52,12 @@ class Login extends Component {
             }
             else{
                 console.log("klmk",baseurl);
-                self.setState({baseurl:baseurl})
+                self.setState({baseurl: JSON.parse(baseurl)})
             }
           });
+
+        //   console.log(value, 'userDATAAAAAAAAAAAAAAAA')
+
     }
 
     onFingerPressed(){
@@ -95,21 +98,20 @@ class Login extends Component {
     }
 
     componentDidUpdate(prevProps){
-        console.log(prevProps,"knjknjknkjnkjnjn");
-        if ( prevProps.userdata.userdata !== this.props.userdata.userdata ) {
+        // console.log(prevProps,"knjknjknkjnkjnjn");
+        if ( Object.keys(prevProps.userdata.userdata).length > 0 && prevProps.userdata.userdata !== this.props.userdata.userdata ) {
             this.props.navigation.navigate("Home");
         }
     }
 
     checkForFirstTime = async (isInstalled) => {
+        console.log(await AsyncStorage.getItem('com.processfusion.userdata'), 'userDATAAAAAAAAAAAAAAAA')
 
         try {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
-          
+            
             if (value !== null) {
                 const userData = await AsyncStorage.getItem('com.processfusion.userdata');
-               
-              
                 if(userData === null){
                     this.setState({isloading:false})
                     this.props.navigation.navigate("Login")
@@ -145,7 +147,7 @@ class Login extends Component {
     }
 
     getTokenCallback(responseData){
-        console.log(responseData, 'asdasd')
+        // console.log(responseData, 'asdasd')
         if (responseData.status === 200) {
             var data = responseData.data;
             this.props.setUserCredentials(data);
@@ -153,17 +155,22 @@ class Login extends Component {
             Toast.show('Token Refreshed...', Toast.SHORT);
             this.props.navigation.navigate("Home", { data });
         }
+        else{
+            Toast.show('Invalid Credentials ! Error Refreshing Token...', Toast.SHORT);
+
+        }
     }
     
     onSignInPressed(username, password) {
-
-        var body = {
-            UserName: username,
-            Password: password
+        // console.log(usernmae, password, 'asdas');
+        var credentials = {
+            "UserName": username,
+            "Password": password
         };
 
-        new MainApiClient_auth().POST_loginFirst(this.getTokenCallback.bind(this), body)
+        new MainApiClient_auth().POST_loginFirst(this.getTokenCallback.bind(this), credentials)
     }
+
     onChangeURLPressed(){
             if(this.state.baseurl !== ''){
                     AsyncStorage.setItem("com.processfusion.baseurl",JSON.stringify(this.state.baseurl));
@@ -229,7 +236,7 @@ class Login extends Component {
                                     </View>
                                 </View>
                                 <View style={{width:width(85),height:height(7),alignItems:"flex-end",justifyContent:"center"}}>
-                                <TouchableOpacity style={{height:height(6),width:width(30),alignItems:"center",justifyContent:"center",backgroundColor:"#63b3f1"}} onPress={() =>this.onChangeURLPressed()}>
+                                <TouchableOpacity style={{height:height(6),width:width(30),alignItems:"center",justifyContent:"center",backgroundColor:"#63b3f1"}} onPress={this.onChangeURLPressed.bind(this)}>
                                                 <Text style={{color:"#fff",fontWeight:"bold",fontSize:16}}>
                                                     Change URL
                                                 </Text>
@@ -326,4 +333,3 @@ function mapDispatchToProps(dispatch) {
     }, dispatch)
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Login);
-
