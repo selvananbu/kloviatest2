@@ -74,7 +74,7 @@ class VPQ extends Component {
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
         this.onActionSheetSelected = this.onActionSheetSelected.bind(this);
-        console.log('+++++++++++++++++++++');
+        // console.log('+++++++++++++++++++++');
         this.navigationWillFocusListener = this.props.navigation.addListener('focus', () => {
             this.loadUserData();
 
@@ -84,6 +84,10 @@ class VPQ extends Component {
     
     componentDidMount() {
         this.loadUserData();
+    }
+
+    componentWillUnmount () {
+        this.navigationWillFocusListener.remove()
     }
 
     getConnectors(){
@@ -108,23 +112,18 @@ class VPQ extends Component {
     }
 
     getPrintJobsCurrentCallback(index, response){
-        console.log(response, 'response')
+        // console.log(response, 'response')
         if (response.status === 200) {
             if(index === 0){
                     this.setState({printQueueDocument:response.data,printQueueDocumentLoading:false,refreshing:false})
             }
             else{
                 this.setState({printedDocument:response.data,printedDocumentLoading:false,refreshing:false})
-                this.props.printedDocument(response.data, true)
             }
         }
         else {
             console.log("njknjknkjn");
         }
-    }
-
-    componentWillUnmount(){
-        this.setState({printedDocument: [], printQueueDocument: []} )
     }
     
     getDocumentsFromServer(userdata){
@@ -163,7 +162,7 @@ class VPQ extends Component {
 
 
     downLoadPrintFile(resp){
-        console.log("jknkjnjknj",resp);
+        // console.log("jknkjnjknj",resp);
         if(resp.data !== "Get print job file failed!: Invalid username and/or password!" && resp.data !== ""){
             var responseData = resp.data;
             // const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
@@ -476,7 +475,6 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return bindActionCreators({
         setUserCredentials: Action.setUserCredentials,
-        printedDocument: Action.printedDocument
     }, dispatch)
 }
 export default connect(mapStateToProps, mapDispatchToProps)(VPQ);

@@ -175,7 +175,6 @@ class Printer extends Component {
     }
     async printRemotePDF(path) {
         await RNPrint.print({ filePath: path })
-        this.props.printedDocument([], false)
         this.props.navigation.navigate("VPQ");
     }
     onRenderStationsRetrieved(response){
@@ -530,8 +529,7 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return bindActionCreators({
         setUserCredentials: Action.setUserCredentials,
-        setFavouritePrinters: Action.setFavouritePrinters,
-        printedDocument: Action.printedDocument
+        setFavouritePrinters: Action.setFavouritePrinters
     }, dispatch)
 }
 export default connect(mapStateToProps, mapDispatchToProps)(Printer);
