@@ -25,7 +25,7 @@ import base64 from 'react-native-base64';
 import FileItem from '../component/FileItem';
 
 import MainApiClient_document from '../../api/documentapi'
-import ClooudPrinter from './CloudPrinterModel';
+// import ClooudPrinter from '../Printer/CloudPrinterModel';
 
 const axios = require('axios');
 var RNFS = require('react-native-fs');
@@ -175,7 +175,13 @@ class VPQ extends Component {
     }
 
   
-
+    componentDidUpdate(prevProps) {
+        if (prevProps.isFocused !== this.props.isFocused) {
+          // Use the `this.props.isFocused` boolean
+          // Call any action
+          console.log("@@@@@@@@@@@@@@@@@@@@@@@@");
+        }
+      }
    
 
     onPrintPressed(file) {
@@ -202,27 +208,7 @@ class VPQ extends Component {
         
       }
 
-      onRenderStationsRetrieved(response){
-          var self = this;
-          if(response !== undefined){
-            console.log(response.data.includes("No stations mapped to printers"));
-            if(response.data !== undefined && !response.data.includes("No stations mapped to printers")){
-                    ToastAndroid.show("Render Station Available for the Printer...",ToastAndroid.SHORT);
-                    var data = JSON.parse(response.data)
-                    console.log(data);
-
-                    var list  = [];
-                    data.Bins.map((bin) => {
-                        list.push({label:bin.Name,value:bin.BinId})
-                    })
-                    self.setState({renderStation:data,bins:list,selectedbin:list[0].value})
-                }
-                else{
-                        ToastAndroid.show("No stations mapped to printers..",ToastAndroid.SHORT);
-                }
-          }
-        
-      }
+   
 
       onConnectorActionSheetSelected(e){
         this.setState({showConnector: false, connector: e.id})
@@ -234,7 +220,6 @@ class VPQ extends Component {
 
       onActionSheetSelected(e){
         this.setState({visible: false, selected: e.id})
-        new MainApiClient_document().GET_availableRenderStationForPrinter(this.onRenderStationsRetrieved.bind(this),e.printer.PrinterId)
       }
 
       onSuccess = e => {
@@ -271,7 +256,7 @@ class VPQ extends Component {
                 />
                 :
                 <View>
-                <Modal
+                {/* <Modal
             animationType="slide"
             transparent={true}
             visible={this.state.showPrintDialog}
@@ -280,7 +265,7 @@ class VPQ extends Component {
             }}
         >
                <ClooudPrinter showPrintDialog={this.state.showPrintDialog} bins={this.state.bins} selectedbin={this.state.selectedbin} renderStation={this.state.renderStation}/>
-               </Modal>
+               </Modal> */}
                 
                 {/* <View style={{flexDirection:"row"}}>
                 <View style={{height:height(8),width:this.state.printerType === "local" ? width(90) : width(75),alignItems:"flex-start",justifyContent:'center'}}>

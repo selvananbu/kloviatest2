@@ -5,14 +5,19 @@ import { width, height } from 'react-native-dimension';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import MainApiClient_proximitydevice from '../../api/proximitydeviceapi'
 import PrinterItem from './PrinterItem';
 import FavouritePrinterItem from './FavouritePrinterItem';
 import RNPrint from 'react-native-print';
 import MainApiClient_document from '../../api/documentapi';
 
+import CloudPrinter from './CloudPrinterModel';
+
 import { RNCamera } from 'react-native-camera';
 import QRCodeScanner from 'react-native-qrcode-scanner';
+
+
+import MainApiClient_proximitydevice from '../../api/proximitydeviceapi'
+import MainApiClient_releaseprintjob from '../../api/releaseprintjob'
 
 var RNFS = require('react-native-fs');
 const axios = require('axios');
@@ -31,12 +36,19 @@ class Printer extends Component {
             currentfile:'',
             isFileLoading:false,
             showScanner:false,
-            selectedCloudPrinter:[]
+            selectedCloudPrinter:[],
+            proximityDeviceList:[]
         }
         this.onQRScannerPressed = this.onQRScannerPressed.bind(this);
         
         this.onSuccess = this.onSuccess.bind(this);
         this.onPrinterItemPressed = this.onPrinterItemPressed.bind(this);
+        this.printRemotely = this.printRemotely.bind(this);
+        this.onRemotePrinterPressed = this.onRemotePrinterPressed.bind(this);
+        this.getProximityDeviceList = this.getProximityDeviceList.bind(this);
+        this.onSuccess = this.onSuccess.bind(this);
+        this.onPrinterDetailsFromProximityId = this.onPrinterDetailsFromProximityId.bind(this);
+        
     }
 
     callbackProximityPrinters(response){
@@ -58,8 +70,20 @@ class Printer extends Component {
             new MainApiClient_proximitydevice().GET_proximitydevice_printers_mappable(this.callbackProximityPrinters.bind(this));
         } 
     }
+    getProximityDeviceList(){
+        var accesstoken = this.props.userdata.userdata.AccessToken;
+        if(accesstoken !== undefined){
+            new MainApiClient_proximitydevice().GET_proximitydevice_list(this.callBackProximityDevice.bind(this));
+        } 
+    }
+    callBackProximityDevice(response){
+        if(response !== undefined){
+            this.setState({proximityDeviceList:response.data})
+        }
+    }
     componentDidMount(){
             this.getPrintersFromServer();
+            this.getProximityDeviceList()
             // this.getProximityPrinters();
     }
     onFavouritePressed(printer){
@@ -128,13 +152,51 @@ class Printer extends Component {
     onQRScannerPressed(){
         this.setState({showScanner:true})
     }
+    onPrinterDetailsFromProximityId(response){
+        if(response !== undefined){
+            console.log("ffffffffffff",response.data);
+            var list = this.state.selectedCloudPrinter;
+            response.data.map((printer) => {
+                list.push(printer);
+            })
+            this.setState({selectedCloudPrinter:list})
+            this.printRemotely();
+        }
+    }
     onSuccess = e => {
-        ToastAndroid.show(e.data,ToastAndroid.SHORT)
+        ToastAndroid.show("Printer Found...",ToastAndroid.SHORT);
+        this.state.proximityDeviceList.map((proximityDevice) => {
+            if(proximityDevice.Data === e.data){
+                new MainApiClient_proximitydevice().GET_printer_from_proximity_id(this.onPrinterDetailsFromProximityId.bind(this),proximityDevice.ProximityDeviceId);
+            }
+        })
         this.setState({showScanner:false})
         
     }
     async printRemotePDF(path) {
         await RNPrint.print({ filePath: path })
+        this.props.navigation.navigate("VPQ");
+    }
+    onRenderStationsRetrieved(response){
+        var self = this;
+        if(response !== undefined){
+          console.log(response.data.includes("No stations mapped to printers"));
+          if(response.data !== undefined && !response.data.includes("No stations mapped to printers")){
+                  ToastAndroid.show("Render Station Available for the Printer...",ToastAndroid.SHORT);
+                  var data = JSON.parse(response.data)
+                  console.log(data);
+
+                  var list  = [];
+                  data.Bins.map((bin) => {
+                      list.push({label:bin.Name,value:bin.BinId})
+                  })
+                  self.setState({renderStation:data,bins:list,selectedbin:list[0].value,showPrintDialog:true})
+              }
+              else{
+                      ToastAndroid.show("No stations mapped to printers..",ToastAndroid.SHORT);
+              }
+        }
+      
     }
     async downloadFile() {
         try {
@@ -160,15 +222,68 @@ class Printer extends Component {
         }
     }
     onPrintPressed(){
-        console.log(this.props.route.params.param,"kjnjnj");
         this.setState({ showSecurePinModal: true, currentfile: this.props.route.params.param })
     }
+    onRemotePrinterPressed(body){
+           
+            this.state.selectedCloudPrinter.map((printer) => {
+                if(body.ReleaseQueues !== undefined && body.ReleaseQueues.length > 0){
+                    body.ReleaseQueues.map((release) => {
+                        release.PrinterId = printer.PrinterId;
+                        release.PrintJobId = this.props.route.params.param.PrintJobId;
+                    })
+
+                    new MainApiClient_releaseprintjob().POST_releaseprintjob(this.onReleasePrintJobCalled.bind(this),body)
+                }
+            })
+
+           
+
+            console.log(body);
+    }
+    onReleasePrintJobCalled(response){
+            var self = this;
+            if(response !== undefined){
+            if(response.data !== undefined){
+                var data = JSON.parse(response.data);
+
+                console.log(data);
+                if(data[0].ErrorCode === 0){
+                    ToastAndroid.show("File Released to Printer Sucessfully...",ToastAndroid.SHORT);
+                    self.setState({showPrintDialog:false,selectedCloudPrinter:[]})
+                    self.props.navigation.navigate("VPQ");
+                }
+                }
+            }
+    } 
     onPrinterItemPressed(printer){
-        console.log("Printer",printer);
-      
+        var isPrinterAlreadyAdded = false;
+        var printerIdx = -1;
         var list = this.state.selectedCloudPrinter;
-        list.push(printer);
+        if(list.length === 0)
+            list.push(printer)
+        else{
+        list.map((temp,idx) => {
+            if(temp.PrinterId === printer.PrinterId){
+                isPrinterAlreadyAdded = true;
+                printerIdx = idx;
+            }
+        })
+        if(isPrinterAlreadyAdded){
+                list.splice(printerIdx,1);
+            }
+        else{
+            list.push(printer);
+        }
+        }
         this.setState({selectedCloudPrinter:list})
+    }
+    printRemotely(){
+        this.state.selectedCloudPrinter.map((cloudPrinter) => {
+            new MainApiClient_document().GET_availableRenderStationForPrinter(this.onRenderStationsRetrieved.bind(this),cloudPrinter.PrinterId)
+        })
+      
+     
     }
     render() {
         var currentfile = this.props.route.params;
@@ -223,6 +338,16 @@ class Printer extends Component {
                         }
                     </View>
                 </Modal>
+                <Modal
+            animationType="slide"
+            transparent={true}
+            visible={this.state.showPrintDialog}
+            onRequestClose={() => {
+                this.setState({showPrintDialog:false})
+            }}
+        >
+               <CloudPrinter showPrintDialog={this.state.showPrintDialog} bins={this.state.bins} selectedbin={this.state.selectedbin}  renderStation={this.state.renderStation} onRemotePrinterPressed={this.onRemotePrinterPressed}/>
+               </Modal>
                
                 {this.state.showScanner
                 ?
@@ -255,7 +380,7 @@ class Printer extends Component {
                         {this.state.favList.map((printer,idx) => {
                             return(
                             <TouchableOpacity  key={idx} style={{alignItems:"center",justifyContent:"center"}}>
-                            <FavouritePrinterItem style={{marginLeft:width(5)}} printer={printer} key={idx} favList={this.state.favList} onFavouritePressed={this.onFavouritePressed.bind(this)}/>
+                            <FavouritePrinterItem style={{marginLeft:width(5)}} printer={printer} key={idx} favList={this.state.favList} onFavouritePressed={this.onFavouritePressed.bind(this)} onPrinterItemPressed={this.onPrinterItemPressed} selectPrinterList={this.state.selectedCloudPrinter}/>
                             </TouchableOpacity>)
                         })}
                     </ScrollView>
@@ -282,20 +407,22 @@ class Printer extends Component {
                     </ScrollView>
                     }
                 </View>
+                {this.state.selectedCloudPrinter.length === 0 
+                ?
                 <View style={{height:height(15),width:width(100),alignItems:"center",justifyContent:"center",borderTopWidth:1,borderColor:"rgba(14, 70, 121,0.1)"}}>
                     <View style={{width:width(95),alignItems:"center",justifyContent:"space-evenly",flexDirection:"row",elevation:8}}>
                         <View style={{width:width(30),alignItems:"center",justifyContent:"center"}}>
-                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true} onPress={() => this.onQRScannerPressed()}>
+                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:this.state.selectedCloudPrinter.length === 0  ? 1 : 0.25}} disabled={this.state.selectedCloudPrinter.length === 0 ? false : true} onPress={() => this.onQRScannerPressed()}>
                             <Image source={require("../../image/nfc.png")} style={{width:width(10),height:height(6)}} resizeMode="contain"/>
                         </TouchableOpacity>
                         </View>
                         <View style={{width:width(30),alignItems:"center",justifyContent:"center"}}>
-                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true}>
+                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:this.state.selectedCloudPrinter.length === 0 ? 1 : 0.25}} disabled={this.state.selectedCloudPrinter.length === 0 ? false : true}>
                             <Image source={require("../../image/Vector.png")} style={{width:width(10),height:height(6)}} resizeMode="contain"/>
                         </TouchableOpacity>
                         </View>
                         <View style={{width:width(30),alignItems:"center",justifyContent:"center"}}>
-                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true}>
+                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:this.state.selectedCloudPrinter.length === 0 ? 1 : 0.25}} disabled={this.state.selectedCloudPrinter.length === 0 ? false : true}>
                             <Image source={require("../../image/bluetooth.png")} style={{width:width(10),height:height(6)}} resizeMode="contain"/>
                         </TouchableOpacity>
                         </View>
@@ -303,13 +430,22 @@ class Printer extends Component {
                  
                     </View>
                     <View style={{height:height(5),width:width(85),alignItems:"center",justifyContent:"center"}}>
-                           <TouchableOpacity style={{width:width(80),height:height(4),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true} onPress={() => this.onPrintPressed()}>
+                           <TouchableOpacity style={{width:width(80),height:height(4),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:this.state.selectedCloudPrinter.length === 0? 1 : 0.25}} disabled={this.state.selectedCloudPrinter.length === 0? false : true} onPress={() => this.onPrintPressed()}>
                             <Text style={{fontSize:16,fontWeight:"bold",fontFamily:"Roboto",color:"#125DA2"}}>
                                 Print Locally
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
+                :
+                <View style={{height:height(15),width:width(100),alignItems:"center",justifyContent:"center",borderTopWidth:1,borderColor:"rgba(14, 70, 121,0.1)"}}>
+                      <TouchableOpacity style={{width:width(80),height:height(4),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center"}}  onPress={() => this.printRemotely()}>
+                            <Text style={{fontSize:16,fontWeight:"bold",fontFamily:"Roboto",color:"#125DA2"}}>
+                                Print Remotely
+                            </Text>
+                        </TouchableOpacity>
+                </View>
+                }
                 </View>
                 }
             </View>
