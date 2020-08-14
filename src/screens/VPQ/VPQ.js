@@ -77,8 +77,21 @@ class VPQ extends Component {
     }
     
     componentDidMount() {
+        console.log(this.props, 'tetstttttttttttttt132132')
         this.loadUserData();
     }
+
+    componentDidUpdate(prevProps, prevState){
+        console.log(prevProps.userdata.printedDoc, this.props, 'tetstttttttttsadsatsadasdtttt123132')
+
+        if(prevProps.userdata.printedDoc.length !== this.props.userdata.printedDoc.length && this.props.route.name === "VPQ"){
+            // this.setState({printedDocument: [], printQueueDocument: []} )
+            this.loadUserData();
+            console.log('tetsttttasdsadtttttsadsatsadasdtttt123132')
+
+        }
+        
+    }   
 
     getConnectors(){
         var list = [];
@@ -109,11 +122,16 @@ class VPQ extends Component {
             }
             else{
                 this.setState({printedDocument:response.data,printedDocumentLoading:false,refreshing:false})
+                this.props.printedDocument(response.data, true)
             }
         }
         else {
             console.log("njknjknkjn");
         }
+    }
+
+    componentWillUnmount(){
+        this.setState({printedDocument: [], printQueueDocument: []} )
     }
     
     getDocumentsFromServer(userdata){
@@ -179,6 +197,9 @@ class VPQ extends Component {
    
 
     onPrintPressed(file) {
+        // this.setState({printedDocument: [], printQueueDocument: []} )
+        this.props.printedDocument([], false)
+
         this.props.navigation.navigate("Printer",{param:file,userdata:this.props.userdata});
         // this.setState({ showSecurePinModal: true, currentfile: file })
     }
@@ -487,7 +508,8 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return bindActionCreators({
-        setUserCredentials: Action.setUserCredentials
+        setUserCredentials: Action.setUserCredentials,
+        printedDocument: Action.printedDocument
     }, dispatch)
 }
 export default connect(mapStateToProps, mapDispatchToProps)(VPQ);

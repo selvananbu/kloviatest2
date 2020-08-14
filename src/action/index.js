@@ -10,3 +10,10 @@ export const setFavouritePrinters = (value) => {
     payload: value
   }
 };
+export const printedDocument = (value, flag) => {
+  return{
+    type: "SETPRINTEDDOC",
+    payload: value,
+    flag: flag
+  }
+}

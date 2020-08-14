@@ -1,6 +1,8 @@
 const initial = {
   userdata: {},
-  favouriteprinters:{}
+  favouriteprinters:{},
+  printedDoc: [],
+  isVPQ: false
 }
 
 export default function (state = initial, action) {
@@ -18,6 +20,12 @@ export default function (state = initial, action) {
         favouriteprinters: action.payload,
       }
       break;
+      case "SETPRINTEDDOC":
+        state = {
+          ...state,
+          printedDoc: action.payload,
+          isVPQ: action.flag
+        }
   }
   console.log(state, 'satete')
   return state;

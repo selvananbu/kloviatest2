@@ -99,6 +99,7 @@ class Home extends Component {
     getPrintJobsCurrentCallback(response){
         if (response.status === 200) {
             this.setState({ vpqdata: response.data.length, recentdocs: response.data })
+            
 
         }
         else {
@@ -200,7 +201,7 @@ class Home extends Component {
                                 </ScrollView>
                                 :
                                 <Text>
-                                    {this.state.recentdocs.length === 0 ? "Loading Recent files" : " No Recenet Files"}
+                                    {this.state.recentdocs !== null && this.state.recentdocs.length === 0 ? "Loading Recent files" : " No Recenet Files"}
                         </Text>
                             }
                         </View>
