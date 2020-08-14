@@ -1,36 +1,40 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ToastAndroid, Image, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, AppState, Image, TextInput, ActivityIndicator,Alert } from 'react-native';
 import { width, height } from 'react-native-dimension';
 import SplashScreen from 'react-native-splash-screen';
 import Toast from 'react-native-simple-toast';
 import { AppInstalledChecker, CheckPackageInstallation } from 'react-native-check-app-install';
 import AsyncStorage from '@react-native-community/async-storage';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import BackgroundTimer from 'react-native-background-timer';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 const axios = require('axios');
 
 import MainApiClient_auth from '../../api/authapi'
-
-var BASEURL = "https://infinitycloudadmin.uniprint.net/api/account/login";
-// var BASEURL = "https://inifnitycloudc-stage.azurewebsites.net/api/account/login";
-
+var DEFAULT_BASEURL = "https://infinitycloudadmin.uniprint.net"
 // create a component
 class Login extends Component {
 
     constructor(props) {
-        super(props)
+        super(props);
         this.state = {
-            username: '',
-            password: '',
+            username: 'anbu.selvan@dezzex.com',
+            password: 'Raji@3091992',
             isloading: true,
-            isSecurePassword:true
+            isSecurePassword:true,
+            status:'active',
+            baseurl:""
+            
         }
         this.checkForLogin = this.checkForLogin.bind(this);
         this.checkForFirstTime = this.checkForFirstTime.bind(this);
+        this.onChangeURLPressed = this.onChangeURLPressed.bind(this);
     }
+
+  
   
     componentDidMount() {
         var self = this;
@@ -41,6 +45,27 @@ class Login extends Component {
             self.checkForFirstTime(false);
 
         // });
+        AsyncStorage.getItem('com.processfusion.baseurl').then((baseurl) => {
+            if(baseurl === null){
+                this.setState({baseurl:DEFAULT_BASEURL})
+                AsyncStorage.setItem('com.processfusion.baseurl',DEFAULT_BASEURL);
+            }
+            else{
+                console.log("klmk",baseurl);
+                self.setState({baseurl:baseurl})
+            }
+          });
+    }
+
+    onFingerPressed(){
+      
+        TouchID.authenticate('to demo this react-native component', optionalConfigObject)
+      .then(success => {
+        Alert.alert('Authenticated Successfully');
+      })
+      .catch(error => {
+        Alert.alert('Authentication Failed');
+      }); 
     }
 
     showPassword(){
@@ -70,6 +95,7 @@ class Login extends Component {
     }
 
     componentDidUpdate(prevProps){
+        console.log(prevProps,"knjknjknkjnkjnjn");
         if ( prevProps.userdata.userdata !== this.props.userdata.userdata ) {
             this.props.navigation.navigate("Home");
         }
@@ -81,8 +107,8 @@ class Login extends Component {
             const value = await AsyncStorage.getItem('com.processfusion.isfirsttime');
           
             if (value !== null) {
-                // this.checkForLogin()
                 const userData = await AsyncStorage.getItem('com.processfusion.userdata');
+               
               
                 if(userData === null){
                     this.setState({isloading:false})
@@ -138,9 +164,16 @@ class Login extends Component {
 
         new MainApiClient_auth().POST_loginFirst(this.getTokenCallback.bind(this), body)
     }
+    onChangeURLPressed(){
+            if(this.state.baseurl !== ''){
+                    AsyncStorage.setItem("com.processfusion.baseurl",JSON.stringify(this.state.baseurl));
+            }
+    }
     render() {
 
         return (
+            
+            <KeyboardAwareScrollView>
             <SafeAreaView style={styles.container}>
                 {this.state.isloading
                     ?
@@ -152,11 +185,13 @@ class Login extends Component {
            </Text>
                     </View>
                     :
-                    <View style={{ width: width(99), height: height(65), alignItems: "center", justifyContent: "center" }}>
-                        <View style={{ width: width(99), height: height(65), alignItems: "center", justifyContent: "center" }}>
-                            <Image source={require("../../image/kloviaicon.png")} style={{ width: width(85), height: height(30) }} resizeMode="contain" />
+                    <View style={{ width: width(99), height: height(70), alignItems: "center", justifyContent: "center" }}>
+                        <View style={{ width: width(99), height: height(70), alignItems: "center", justifyContent: "center" }}>
+                            <View style={{height:height(25),alignItems:"center",justifyContent:"center",width:width(100)}}>
+                            <Image source={require("../../image/kloviaicon.png")} style={{ width: width(85), height: height(20) }} resizeMode="contain" />
+                            </View>
 
-                            <View style={{ width: width(90), heighStatut: height(28), backgroundColor: "#f2f2f7", borderWidth: 1, borderColor: "#a7a7a7", alignItems: "center", justifyContent: "center" }}>
+                            <View style={{ width: width(90), heighStatut: height(38), backgroundColor: "#f2f2f7", borderWidth: 1, borderColor: "#a7a7a7", alignItems: "center", justifyContent: "center" }}>
                                 <View style={{ height: height(8), borderBottomWidth: 1, borderBottomColor: "#a7a7a7", width: width(86), flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
                                     <View style={{ width: width(25), height: height(8), alignItems: "center", justifyContent: "center" }}>
                                         <Text style={{ color: "#315b91", fontSize: 16 }} >
@@ -182,13 +217,32 @@ class Login extends Component {
                                         </View>
                                     </View>
                                 </View>
+
+                                <View style={{ height: height(9), borderBottomWidth: 1, borderBottomColor: "#a7a7a7", width: width(86), flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+                                  
+                                    <View style={{ width: width(85), height: height(8), alignItems: "center", justifyContent: "center" ,flexDirection:"row"}} >
+                                        <TextInput placeholder="UserName@domain.com" style={{ width: width(75), height: height(8), color: "#000", fontSize: 16 }}
+                                        value={this.state.baseurl} 
+                                        autoCapitalize="none" onChangeText={(text) => this.setState({ baseurl: text })} />
+
+                                            
+                                    </View>
+                                </View>
+                                <View style={{width:width(85),height:height(7),alignItems:"flex-end",justifyContent:"center"}}>
+                                <TouchableOpacity style={{height:height(6),width:width(30),alignItems:"center",justifyContent:"center",backgroundColor:"#63b3f1"}} onPress={() =>this.onChangeURLPressed()}>
+                                                <Text style={{color:"#fff",fontWeight:"bold",fontSize:16}}>
+                                                    Change URL
+                                                </Text>
+                                            </TouchableOpacity>
+                                </View>
+                               
                                 {this.state.username.length === 0 || this.state.password.length === 0
                                     ?
                                     <View style={{ opacity: 0.2 }}>
                                         <TouchableOpacity style={{ width: width(85), height: height(6), backgroundColor: "#64b2f1", alignItems: "center", justifyContent: "center", marginBottom: height(2), borderRadius: 4 }} onPress={this.onSignInPressed.bind(this, this.state.username, this.state.password)}>
                                             <Text style={{ color: "#fff", fontSize: 20 }}>
                                                 Sign In
-            </Text>
+                                            </Text>
                                         </TouchableOpacity>
                                     </View>
                                     :
@@ -196,7 +250,7 @@ class Login extends Component {
                                         <TouchableOpacity style={{ width: width(85), height: height(6), backgroundColor: "#64b2f1", alignItems: "center", justifyContent: "center", marginBottom: height(2), borderRadius: 4 }} onPress={this.onSignInPressed.bind(this, this.state.username, this.state.password)}>
                                             <Text style={{ color: "#fff", fontSize: 20 }}>
                                                 Sign In
-            </Text>
+                                            </Text>
                                         </TouchableOpacity>
                                     </View>
                                 }
@@ -233,7 +287,6 @@ class Login extends Component {
 
                         </TouchableOpacity>
 
-
                         <TouchableOpacity style={{ width: width(99), alignItems: "center", justifyContent: "center" }}>
 
                             <Text style={{ color: "#5c575a", fontSize: 16 }}>
@@ -242,8 +295,9 @@ class Login extends Component {
                         </TouchableOpacity>
                     </View>
                 }
-
             </SafeAreaView>
+            
+</KeyboardAwareScrollView>
         );
     }
 }
@@ -255,6 +309,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#fff',
+        height:height(100)
     },
 });
 

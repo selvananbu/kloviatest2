@@ -7,12 +7,18 @@ import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { ScrollView } from 'react-native-gesture-handler';
-import RNFetchBlob from 'rn-fetch-blob'
-import RNPrint from 'react-native-print';
 import {Picker} from '@react-native-community/picker';
 // import ActionSheet from 'react-native-actionsheet'
 import Actionsheet from 'react-native-enhanced-actionsheet'
+import { RNCamera } from 'react-native-camera';
 import Share from "react-native-share";
+import QRCodeScanner from 'react-native-qrcode-scanner';
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+  } from 'react-native-popup-menu';
 
 
 import base64 from 'react-native-base64';
@@ -47,7 +53,9 @@ class VPQ extends Component {
             visible: false,
             actionsheetoptions:[],
             selected: 0,
+            connector:0,
             renderStation:'',
+            showConnector:false,
             showPrintDialog:false,
             selectedbin:null,
             bins:[],
@@ -60,7 +68,8 @@ class VPQ extends Component {
             copies:0,
             selectedColor:1,
             collate:0,
-            selectedduplex:0
+            selectedduplex:0,
+            showScanner:false
         }
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
@@ -71,6 +80,13 @@ class VPQ extends Component {
         this.loadUserData();
     }
 
+    getConnectors(){
+        var list = [];
+        list.push({id:0,label:"QR Code",value:0});
+        list.push({id:1,label:"NFC Tag",value:1});
+        list.push({id:2,label:"Bluetooth Scan",value:2});
+        return list;
+    }
     getOptions(){
         var COUNT = 0
         var OPTIONS = [];
@@ -132,17 +148,7 @@ class VPQ extends Component {
         }
     }
 
-    onSubmitPressed() {
-        this.setState({ showSecurePinModal: false,isFileLoading:true });
-        ToastAndroid.show("Loading File...",ToastAndroid.SHORT)
-        var accesstoken = this.state.userdata.AccessToken;
-        
-        if (accesstoken !== undefined) {
-            var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
-            new MainApiClient_document().GET_printJobsPrintFile(this.downLoadPrintFile.bind(this), body, accesstoken)
-          }
-          
-    }
+    
 
 
     downLoadPrintFile(resp){
@@ -168,37 +174,13 @@ class VPQ extends Component {
         }
     }
 
-    async printRemotePDF(path) {
-        console.log(path)
-        await RNPrint.print({ filePath: path })
-    }
+  
 
-    async downloadFile() {
-        try {
-            const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
-            // console.log("njknjknjknkjn");
-            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                try {
-                    // console.log('asdasdasd')
-                    const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
-                    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-                        this.onSubmitPressed();
-                    } else {
-                        Alert.alert('Permission Denied!', 'You need to give storage permission to download the file');
-                    }
-                } catch (err) {
-                    console.warn(err);
-                }
-            } else {
-                Alert.alert('Permission Denied!', 'You need to give storage permission to download the file');
-            }
-        } catch (err) {
-            console.warn(err);
-        }
-    }
+   
 
     onPrintPressed(file) {
-        this.setState({ showSecurePinModal: true, currentfile: file })
+        this.props.navigation.navigate("Printer",{param:file,userdata:this.props.userdata});
+        // this.setState({ showSecurePinModal: true, currentfile: file })
     }
     onSharePressed(file){
         console.log("knknkjn",file);
@@ -220,36 +202,45 @@ class VPQ extends Component {
         
       }
 
-      onActionSheetSelected(e){
-        this.setState({visible: false, selected: e.id})
-        var accesstoken = this.state.userdata.AccessToken;
-       var self = this;
-        if (accesstoken !== undefined){
-        axios({
-            method: 'get',
-            url: 'https://infinitycloudadmin.uniprint.net/api/renderstations/mobile/release/printer/' + e.printer.PrinterId,
-            headers: {
-                Authorization: `Bearer ${accesstoken}`
-            }
-          })
-            .then(function (response) {
-            if(response.status === 200){
-                ToastAndroid.show("Render Station Available for the Printer...",ToastAndroid.SHORT);
-                // self.getBins();
-                var list  = [];
-                response.data.Bins.map((bin) => {
-                    list.push({label:bin.Name,value:bin.BinId})
-                })
-                self.setState({showPrintDialog:true,renderStation:response.data,bins:list,selectedbin:list[0].value})
-            }
-            else{
-                    ToastAndroid.show("No stations mapped to printers..",ToastAndroid.SHORT);
-            }
-             
-            });
-        }
+      onRenderStationsRetrieved(response){
+          var self = this;
+          if(response !== undefined){
+            console.log(response.data.includes("No stations mapped to printers"));
+            if(response.data !== undefined && !response.data.includes("No stations mapped to printers")){
+                    ToastAndroid.show("Render Station Available for the Printer...",ToastAndroid.SHORT);
+                    var data = JSON.parse(response.data)
+                    console.log(data);
+
+                    var list  = [];
+                    data.Bins.map((bin) => {
+                        list.push({label:bin.Name,value:bin.BinId})
+                    })
+                    self.setState({renderStation:data,bins:list,selectedbin:list[0].value})
+                }
+                else{
+                        ToastAndroid.show("No stations mapped to printers..",ToastAndroid.SHORT);
+                }
+          }
         
       }
+
+      onConnectorActionSheetSelected(e){
+        this.setState({showConnector: false, connector: e.id})
+        if(e.id === 0){
+            this.setState({showScanner:true})
+        }
+    
+      }
+
+      onActionSheetSelected(e){
+        this.setState({visible: false, selected: e.id})
+        new MainApiClient_document().GET_availableRenderStationForPrinter(this.onRenderStationsRetrieved.bind(this),e.printer.PrinterId)
+      }
+
+      onSuccess = e => {
+        ToastAndroid.show(e.data,ToastAndroid.SHORT)
+        this.setState({showScanner:false})
+    }
       getBins(){
           var list  = [];
           if(this.state.renderStation !== "" && this.state.renderStation.Bins !== []){
@@ -265,6 +256,21 @@ class VPQ extends Component {
         const selectedOption = this.getOptions().find((e) => e.id === this.state.selected)
         return (
             <View style={styles.container}>
+                {this.state.showScanner
+                ?
+                  <QRCodeScanner
+                style={{width:width(99),height:height(75),alignItems:"center",justifyContent:"center"}}
+                    onRead={this.onSuccess}
+                    flashMode={RNCamera.Constants.FlashMode.off}
+                
+                    bottomContent={
+                    <TouchableOpacity style={styles.buttonTouchable} onPress={() => this.setState({showScanner:false})}>
+                        <Text style={styles.buttonText}>Cancel Scan</Text>
+                    </TouchableOpacity>
+                    }
+                />
+                :
+                <View>
                 <Modal
             animationType="slide"
             transparent={true}
@@ -275,65 +281,17 @@ class VPQ extends Component {
         >
                <ClooudPrinter showPrintDialog={this.state.showPrintDialog} bins={this.state.bins} selectedbin={this.state.selectedbin} renderStation={this.state.renderStation}/>
                </Modal>
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={this.state.showSecurePinModal}
-                    onRequestClose={() => {
-                        this.setState({showSecurePinModal:false})
-                    }}
-                >
-                    <View style={styles.centeredView}>
-                        {this.state.isFileLoading
-                            ?
-                            <View style={styles.modalView}>
-                                <ActivityIndicator />
-                            </View>
-                            :
-                            <View style={styles.modalView}>
-                                <View style={{ width: width(65), height: height(5), borderTopRightRadius: 20, borderTopLeftRadius: 20, backgroundColor: "#3A3A3A", alignItems: "center", justifyContent: "center" }}>
-                                    <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>
-                                        Secure Pin
-                            </Text>
-                                </View>
-                                <View style={{ height: height(8), width: width(65), alignItems: "center", justifyContent: "flex-end" }}>
-                                    <TextInput
-                                        placeholder="Enter Secure Pin..."
-                                        secureTextEntry={true}
-                                        onChangeText={(text) => this.setState({ pin: text })}
-                                        style={{ width: width(45), height: height(7), marginTop: height(3), borderBottomColor: "grey", borderBottomWidth: 1 }} />
-                                </View>
-                                <View style={{ width: width(45), height: height(8), borderBottomRightRadius: 20, borderBottomLeftRadius: 20, alignItems: "center", justifyContent: "space-evenly", flexDirection: "row" }}>
-
-                                    <TouchableOpacity
-                                        style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
-                                        onPress={this.downloadFile.bind(this)}
-                                    >
-
-                                        <Text style={styles.textStyle}>SUBMIT</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
-                                        onPress={() => this.setState({ showSecurePinModal: false, })}
-                                    >
-
-                                        <Text style={styles.textStyle}>CANCEL</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        }
-                    </View>
-                </Modal>
-                <View style={{flexDirection:"row"}}>
+                
+                {/* <View style={{flexDirection:"row"}}>
                 <View style={{height:height(8),width:this.state.printerType === "local" ? width(90) : width(75),alignItems:"flex-start",justifyContent:'center'}}>
-                <Text style={{fontFamily:"Roboto",fontSize:12,color:"#125DA3"}}>
+                <Text style={{fontFamily:"Roboto",fontSize:12,color:"#125DA3",marginLeft:width(2)}}>
                             Type of Printing 
                         </Text>
                 
-                <View style={{borderBottomWidth:1,borderBottomColor:"#125DA3",height:height(7),alignItems:"center",justifyContent:"center"}}>
+                <View style={{borderBottomWidth:1,borderBottomColor:"#125DA3",height:height(7),alignItems:"center",justifyContent:"center",marginLeft:width(2)}}>
                                     <Picker
                     selectedValue={this.state.printerType}
-                    style={{height: height(6), width:this.state.printerType === "local" ? width(90) : width(75)}}
+                    style={{height: height(6), width:this.state.printerType === "local" ? width(90) : width(70)}}
                     onValueChange={(itemValue, itemIndex) =>
                         this.setState({printerType: itemValue})
                     }>
@@ -346,11 +304,26 @@ class VPQ extends Component {
                     ?
                     <View/>
                     :
-                    <View style={{width:width(15)}}>
-       
+                    <View>
+       <View style={{flexDirection:"row",width:width(25),justifyContent:"space-evenly",alignItems:"center"}}>
         <TouchableOpacity style={{width:width(13),alignItems:"center",justifyContent:"center",height:height(8)}}  onPress={() => this.setState({visible: true})}>
         <Image source={require("../../image/cloudprint.png")} style={{ width: width(12), height: height(8) }} resizeMode="contain" />
         </TouchableOpacity>
+        <TouchableOpacity style={{width:width(13),alignItems:"center",justifyContent:"center",height:height(8)}}  onPress={() => this.setState({showConnector: true})}>
+        <Image source={require("../../image/nfc.png")} style={{ width: width(8), height: height(6) }} resizeMode="contain" />
+        </TouchableOpacity>
+        </View>
+
+        <Actionsheet 
+          visible={this.state.showConnector}
+          data={this.getConnectors()} 
+          title={'Select your Way of Connector?'}
+          selected={this.state.connector}
+          selectedOptionTextStyle={{color:"#fff",fontWeight:"bold"}}
+          selectedOptionContainerStyle={{backgroundColor:"#90c2f0",height:height(6),alignItems:"center",justifyContent:"center"}}
+          onOptionPress={(e) => this.onConnectorActionSheetSelected(e)}
+          onCancelPress={() => this.setState({showConnector: false})}
+        />
        
         <Actionsheet 
           visible={this.state.visible}
@@ -366,13 +339,20 @@ class VPQ extends Component {
     }
       </View>
 
-              
+               */}
+               {/* <View style={{width:width(100),alignItems:"center",justifyContent:"center",height:height(5)}}>
+               <View style={{backgroundColor:"#cfcfcf",borderRadius:12,width:width(90),height:height(4)}}>
+                   
+                   <TextInput style={{width:width(75),height:height(4)}}/>
+                </View>
+                </View> */}
                 <View style={{height:height(35),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     <View style={{height:height(5),width:width(90),alignItems:"flex-start",justifyContent:'center'}}>
                         <Text style={{fontFamily:"Roboto",fontSize:18}}>
                             Current 
                         </Text>
                     </View>
+                    
                     <View style={{height:height(30),width:width(100),alignItems:"center",justifyContent:"center"}}>
                     {this.state.printQueueDocumentLoading
                     ?
@@ -411,6 +391,8 @@ class VPQ extends Component {
                     </ScrollView>}
                     </View>
                 </View>
+            </View>
+            }
             </View>
         );
     }
@@ -478,6 +460,22 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5
     },
+    
+    textBold: {
+        fontWeight: '500',
+        color: '#000'
+      },
+      buttonText: {
+        fontSize: 21,
+        color: "#fff",
+        fontWeight:"bold"
+      },
+      buttonTouchable: {
+        padding: 16,
+        marginTop:height(8),
+        backgroundColor:'#125DA3',
+        borderRadius:18
+      }
 });
 
 function mapStateToProps(state) {

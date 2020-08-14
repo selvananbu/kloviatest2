@@ -1,18 +1,21 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator,Image } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator,Modal,TextInput,TouchableOpacity,PermissionsAndroid,Alert, ToastAndroid , ScrollView,Image } from 'react-native';
 import { width, height } from 'react-native-dimension';
-import { ScrollView, TouchableOpacity } from 'react-native-gesture-handler';
 import * as Action from '../../action/index';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import MainApiClient_proximitydevice from '../../api/proximitydeviceapi'
 import PrinterItem from './PrinterItem';
 import FavouritePrinterItem from './FavouritePrinterItem';
- 
+import RNPrint from 'react-native-print';
+import MainApiClient_document from '../../api/documentapi';
 
+import { RNCamera } from 'react-native-camera';
+import QRCodeScanner from 'react-native-qrcode-scanner';
+
+var RNFS = require('react-native-fs');
 const axios = require('axios');
-
 // create a component
 class Printer extends Component {
 
@@ -21,8 +24,19 @@ class Printer extends Component {
         this.state={
             printers:[],
             favList:[],
-            isloadingPrinters:true
+            isloadingPrinters:true,
+            showPrintDialog:false,
+            showSecurePinModal: false,
+            pin: '',
+            currentfile:'',
+            isFileLoading:false,
+            showScanner:false,
+            selectedCloudPrinter:[]
         }
+        this.onQRScannerPressed = this.onQRScannerPressed.bind(this);
+        
+        this.onSuccess = this.onSuccess.bind(this);
+        this.onPrinterItemPressed = this.onPrinterItemPressed.bind(this);
     }
 
     callbackProximityPrinters(response){
@@ -38,8 +52,15 @@ class Printer extends Component {
             new MainApiClient_proximitydevice().GET_proximitydevice_printers_mappable(this.callbackProximityPrinters.bind(this));
         }
     }
+    getProximityPrinters(){
+        var accesstoken = this.props.userdata.userdata.AccessToken;
+        if(accesstoken !== undefined){
+            new MainApiClient_proximitydevice().GET_proximitydevice_printers_mappable(this.callbackProximityPrinters.bind(this));
+        } 
+    }
     componentDidMount(){
             this.getPrintersFromServer();
+            // this.getProximityPrinters();
     }
     onFavouritePressed(printer){
         
@@ -71,10 +92,154 @@ class Printer extends Component {
         
       
     }
+    downLoadPrintFile(resp){
+        console.log("jknkjnjknj",resp);
+        if(resp.data !== "Get print job file failed!: Invalid username and/or password!" && resp.data !== ""){
+            var responseData = resp.data;
+            // const file_path = DownloadDir + "/" + this.state.pin.toString() + ".pdf"
+            var path = RNFS.DownloadDirectoryPath + "/" + this.state.pin.toString() + ".pdf";
+            // write the file
+            RNFS.writeFile(path, responseData, 'base64')
+            .then((success) => {
+                this.printRemotePDF(path)
+                this.setState({isFileLoading:false})
+            })
+            .catch((err) => {
+                console.log(err.message);
+            });
+        }
+        else{
+            this.setState({showSecurePinModal:false})    
+            ToastAndroid.show("Invalid Pin...",ToastAndroid.SHORT);
+            this.setState({isFileLoading:false,pin:''})
+        }
+    }
+    onSubmitPressed() {
+        this.setState({ showSecurePinModal: false,isFileLoading:true });
+        var accesstoken = this.props.route.params.userdata.userdata.AccessToken;
+        console.log("Acesss",accesstoken);
+        if (accesstoken !== undefined) {
+                ToastAndroid.show("Loading File...",ToastAndroid.SHORT)
+                var body = { "JobId": this.state.currentfile.PrintJobId.toString(), "Pin": this.state.pin.toString() };
+                new MainApiClient_document().GET_printJobsPrintFile(this.downLoadPrintFile.bind(this), body, accesstoken)
+          }
+          
+    }
+    onQRScannerPressed(){
+        this.setState({showScanner:true})
+    }
+    onSuccess = e => {
+        ToastAndroid.show(e.data,ToastAndroid.SHORT)
+        this.setState({showScanner:false})
+        
+    }
+    async printRemotePDF(path) {
+        await RNPrint.print({ filePath: path })
+    }
+    async downloadFile() {
+        try {
+            const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+            // console.log("njknjknjknkjn");
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                try {
+                    // console.log('asdasdasd')
+                    const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
+                    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                        this.onSubmitPressed();
+                    } else {
+                        Alert.alert('Permission Denied!', 'You need to give storage permission to download the file');
+                    }
+                } catch (err) {
+                    console.warn(err);
+                }
+            } else {
+                Alert.alert('Permission Denied!', 'You need to give storage permission to download the file');
+            }
+        } catch (err) {
+            console.warn(err);
+        }
+    }
+    onPrintPressed(){
+        console.log(this.props.route.params.param,"kjnjnj");
+        this.setState({ showSecurePinModal: true, currentfile: this.props.route.params.param })
+    }
+    onPrinterItemPressed(printer){
+        console.log("Printer",printer);
+      
+        var list = this.state.selectedCloudPrinter;
+        list.push(printer);
+        this.setState({selectedCloudPrinter:list})
+    }
     render() {
+        var currentfile = this.props.route.params;
         return (
             <View style={styles.container}>
-                <View style={{width:width(90),height:height(8),alignItems:"flex-start",justifyContent:"center"}}>
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={this.state.showSecurePinModal}
+                    onRequestClose={() => {
+                        this.setState({showSecurePinModal:false})
+                    }}
+                >
+                    <View style={styles.centeredView}>
+                        {this.state.isFileLoading
+                            ?
+                            <View style={styles.modalView}>
+                                <ActivityIndicator />
+                            </View>
+                            :
+                            <View style={styles.modalView}>
+                                <View style={{ width: width(65), height: height(5), borderTopRightRadius: 20, borderTopLeftRadius: 20, backgroundColor: "#3A3A3A", alignItems: "center", justifyContent: "center" }}>
+                                    <Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold" }}>
+                                        Secure Pin
+                            </Text>
+                                </View>
+                                <View style={{ height: height(8), width: width(65), alignItems: "center", justifyContent: "flex-end" }}>
+                                    <TextInput
+                                        placeholder="Enter Secure Pin..."
+                                        secureTextEntry={true}
+                                        onChangeText={(text) => this.setState({ pin: text })}
+                                        style={{ width: width(45), height: height(7), marginTop: height(3), borderBottomColor: "grey", borderBottomWidth: 1 }} />
+                                </View>
+                                <View style={{ width: width(45), height: height(8), borderBottomRightRadius: 20, borderBottomLeftRadius: 20, alignItems: "center", justifyContent: "space-evenly", flexDirection: "row" }}>
+
+                                    <TouchableOpacity
+                                        style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
+                                        onPress={this.downloadFile.bind(this)}
+                                    >
+
+                                        <Text style={styles.textStyle}>SUBMIT</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={{ ...styles.openButton, backgroundColor: "#2196F3" }}
+                                        onPress={() => this.setState({ showSecurePinModal: false, })}
+                                    >
+
+                                        <Text style={styles.textStyle}>CANCEL</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        }
+                    </View>
+                </Modal>
+               
+                {this.state.showScanner
+                ?
+                  <QRCodeScanner
+                style={{width:width(99),height:height(75),alignItems:"center",justifyContent:"center"}}
+                    onRead={this.onSuccess}
+                    flashMode={RNCamera.Constants.FlashMode.off}
+                
+                    bottomContent={
+                    <TouchableOpacity style={styles.buttonTouchable} onPress={() => this.setState({showScanner:false})}>
+                        <Text style={styles.buttonText}>Cancel Scan</Text>
+                    </TouchableOpacity>
+                    }
+                />
+                :
+                <View>
+                <View style={{width:width(90),height:height(6),alignItems:"flex-start",justifyContent:"center"}}>
                 <Text style={{  fontSize: 18, fontFamily: "Roboto" }}>My Favourite Printers ({this.state.favList.length})</Text>
                 </View>
                 <View style={{width:width(100),height:height(15),alignItems:"center",justifyContent:"center"}}>
@@ -96,7 +261,7 @@ class Printer extends Component {
                     </ScrollView>
                     }
                     </View>
-                <View style={{width:width(99),height:height(60),alignItems:"center",justifyContent:"center"}}>
+                <View style={{width:width(99),height:height(50),alignItems:"center",justifyContent:"center"}}>
                 <View style={{width:width(90),height:height(4),alignItems:"flex-start",justifyContent:"center"}}>
         <Text style={{  fontSize: 18, fontFamily: "Roboto" }}>All Available Printers ({this.state.printers.length})</Text>
                 </View>
@@ -112,11 +277,41 @@ class Printer extends Component {
                     :
                     <ScrollView showsVerticalScrollIndicator={false}>
                         {this.state.printers.map((printer,idx) => {
-                            return(<PrinterItem printer={printer} key={idx} favList={this.state.favList} onFavouritePressed={this.onFavouritePressed.bind(this)}/>)
+                            return(<PrinterItem printer={printer} file={currentfile} key={idx}  onPrinterItemPressed={this.onPrinterItemPressed} selectPrinterList={this.state.selectedCloudPrinter} favList={this.state.favList} onFavouritePressed={this.onFavouritePressed.bind(this)}/>)
                         })}
                     </ScrollView>
                     }
                 </View>
+                <View style={{height:height(15),width:width(100),alignItems:"center",justifyContent:"center",borderTopWidth:1,borderColor:"rgba(14, 70, 121,0.1)"}}>
+                    <View style={{width:width(95),alignItems:"center",justifyContent:"space-evenly",flexDirection:"row",elevation:8}}>
+                        <View style={{width:width(30),alignItems:"center",justifyContent:"center"}}>
+                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true} onPress={() => this.onQRScannerPressed()}>
+                            <Image source={require("../../image/nfc.png")} style={{width:width(10),height:height(6)}} resizeMode="contain"/>
+                        </TouchableOpacity>
+                        </View>
+                        <View style={{width:width(30),alignItems:"center",justifyContent:"center"}}>
+                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true}>
+                            <Image source={require("../../image/Vector.png")} style={{width:width(10),height:height(6)}} resizeMode="contain"/>
+                        </TouchableOpacity>
+                        </View>
+                        <View style={{width:width(30),alignItems:"center",justifyContent:"center"}}>
+                        <TouchableOpacity style={{width:width(15),height:height(8),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true}>
+                            <Image source={require("../../image/bluetooth.png")} style={{width:width(10),height:height(6)}} resizeMode="contain"/>
+                        </TouchableOpacity>
+                        </View>
+
+                 
+                    </View>
+                    <View style={{height:height(5),width:width(85),alignItems:"center",justifyContent:"center"}}>
+                           <TouchableOpacity style={{width:width(80),height:height(4),borderWidth:1,borderColor:"#125DA2",borderRadius:8,alignItems:"center",justifyContent:"center",opacity:currentfile !== undefined ? 1 : 0.25}} disabled={currentfile !== undefined ? false : true} onPress={() => this.onPrintPressed()}>
+                            <Text style={{fontSize:16,fontWeight:"bold",fontFamily:"Roboto",color:"#125DA2"}}>
+                                Print Locally
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                </View>
+                }
             </View>
         );
     }
@@ -130,6 +325,60 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#fff',
     },
+    centeredView: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        // marginTop: 22,
+        backgroundColor: "rgba(255,255,255,0.45)"
+    },
+
+    textStyle: {
+        color: "white",
+        fontWeight: "bold",
+        textAlign: "center"
+    },
+    openButton: {
+        backgroundColor: "#F194FF",
+        borderRadius: 20,
+        padding: 12,
+        elevation: 2
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        // padding: 5,
+        width: width(65),
+        height: height(22),
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5
+    },
+    modalViewPrint: {
+        marginTop:height(20),
+        marginLeft:width(8),
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        // padding: 5,
+        width: width(85),
+        height: height(60),
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5
+    }
 });
 
 

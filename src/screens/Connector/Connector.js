@@ -65,7 +65,10 @@ class Connector extends Component {
                {!this.state.isQRScannerOpened && !this.state.isBluetoothScanner && !this.state.isNFCConnector
                ?
               <View>
-                <TouchableOpacity style={{width:width(99),height:height(12),alignItems:"center",justifyContent:"center",flexDirection:"row",borderWidth:1,borderRadius:12,borderColor:"#125DA3"}} onPress={() => this.setState({isQRScannerOpened:true})}>
+                <Text style={{fontSize:18,fontFamily:"Roboto",color:"#125DA3"}}>
+                  Coming Soon....
+                </Text>
+                {/* <TouchableOpacity style={{width:width(99),height:height(12),alignItems:"center",justifyContent:"center",flexDirection:"row",borderWidth:1,borderRadius:12,borderColor:"#125DA3"}} onPress={() => this.setState({isQRScannerOpened:true})}>
                    <View style={{width:width(15),height:height(15),alignItems:"center",justifyContent:"center"}}>
                     <Image source={require("../../image/Vector.png")} style={{width:width(12),height:height(12)}} resizeMode="contain"/>
                    </View>
@@ -103,7 +106,7 @@ class Connector extends Component {
                    <View style={{width:width(15),height:height(15),alignItems:"center",justifyContent:"center"}}>
                     <Image source={require("../../image/right-dir.png")} style={{width:width(10),height:height(10)}} resizeMode="contain"/>
                    </View>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 </View>
                 :
                 <View/>

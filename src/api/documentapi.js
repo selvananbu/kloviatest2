@@ -14,7 +14,6 @@ class MainApiClient_document extends MainApiClient {
     GET_printJobsCurrent(callback, index, currentUser){
         var self = this;
         ensureAccessTokenIsValid(function(accessToken){
-            console.log(":hjkbhjb");
             try {
                 const config = {
                     url: self.getUrl(['printjobs', index, currentUser]),
@@ -40,6 +39,30 @@ class MainApiClient_document extends MainApiClient {
         })
         
 
+    }
+
+    GET_availableRenderStationForPrinter(callback,printerId){
+        var self = this;
+        ensureAccessTokenIsValid(function(accessToken){
+            try {
+                RNFetchBlob.fetch('GET', self.getUrl(['renderstations','mobile','release','printer',printerId]), {
+                    "Authorization": `Bearer ${accessToken}`,
+                })
+                .then(function(response) {
+        
+                    callback(response);
+                })
+                .catch(function(err) {
+                    console.log(err, 'asdasdasdsad');
+                    callback(err);
+                })
+                
+                
+            }
+            catch (e) {
+                callback(e); // pass exception object to err handler
+            }
+        }) 
     }
 
     GET_printJobsPrintFile(callback, body = {}){

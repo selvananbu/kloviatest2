@@ -2,8 +2,21 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { width, height } from 'react-native-dimension';
+import {
+    Menu,
+    MenuOptions,
+    MenuOption,
+    MenuTrigger,
+  } from 'react-native-popup-menu';
 // create a component
 class FileItem extends React.PureComponent {
+
+    constructor(props){
+        super(props);
+        this.state={
+            menu:false
+        }
+    }
 
     getFileImage(name) {
         var extension = name.split(".").pop();
@@ -32,6 +45,13 @@ class FileItem extends React.PureComponent {
     onMenuPressed(file){
             console.log("fieeeeeeee",file);
     }
+    getMenuOption(){
+        return(
+            <TouchableOpacity style={{width:width(10),height:height(8),alignItems:"center",justifyContent:"center"}} onPress={() => this.setState({menu:true})}>
+                <Image source={require("../../image/hambermenu.png")} style={{width:width(2),height:height(2)}} resizeMode="contain"/>
+            </TouchableOpacity>
+        )
+    }
     
     render() {
         var file = this.props.file;
@@ -56,18 +76,22 @@ class FileItem extends React.PureComponent {
                         {file.Date}
                     </Text>
                 </View>
-                <View style={{ width: width(12), height: "100%", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly" }}>
+                {/* <View style={{ width: width(12), height: "100%", flexDirection: "row", alignItems: "center", justifyContent: "space-evenly" }}>
                     <TouchableOpacity style={{ width: width(2), height: width(2), borderRadius: width(2) / 2, backgroundColor: file.Status === 0 ? "#38BF7C" : "#DF5140" }} />
                     <Text style={{ fontFamily: "Roboto", fontSize: 10 }}>
                         Status
                 </Text>
-                </View>
+                </View> */}
                 <TouchableOpacity style={{ width: width(10), height: height(6), alignItems: "center", justifyContent: "center" }} onPress={this.onPrintPressed.bind(this, file)}>
                     <Image source={require("../../image/print.png")} style={{ width: width(5), height: height(5) }} resizeMode="contain" />
                 </TouchableOpacity>
                 <TouchableOpacity style={{ width: width(10), height: height(6), alignItems: "center", justifyContent: "center" }} onPress={this.onMenuPressed.bind(this, file)}>
                     <Image source={require("../../image/share.png")} style={{ width: width(5), height: height(5) }} resizeMode="contain" />
                 </TouchableOpacity>
+                <TouchableOpacity style={{ width: width(10), height: height(6), alignItems: "center", justifyContent: "center" }} onPress={this.onMenuPressed.bind(this, file)}>
+                    <Image source={require("../../image/delete.png")} style={{ width: width(5), height: height(5) }} resizeMode="contain" />
+                </TouchableOpacity>
+               
             </TouchableOpacity>
         );
     }

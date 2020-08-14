@@ -1,6 +1,6 @@
 //import liraries
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Image, ImageBackground, ActivityIndicator,ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, ImageBackground, ActivityIndicator,ScrollView,AppState } from 'react-native';
 import { width, height } from 'react-native-dimension';
 import { TouchableNativeFeedback, TouchableOpacity,  } from 'react-native-gesture-handler';
 import { Dimensions } from "react-native";
@@ -62,7 +62,8 @@ class Home extends Component {
         this.state = {
             vpqdata: '',
             userdata: '',
-            recentdocs: []
+            recentdocs: [],
+            appState: AppState.currentState
         }
     }
     
@@ -96,19 +97,17 @@ class Home extends Component {
     }
 
     getPrintJobsCurrentCallback(response){
-        console.log("frggg",response);
         if (response.status === 200) {
             this.setState({ vpqdata: response.data.length, recentdocs: response.data })
 
         }
         else {
-            console.log("njknjknkjn");
+            // console.log("njknjknkjn");
         }
     }
     
     loadUserData(){
         const value = this.props.userdata.userdata;
-        console.log("jknkjnkjn",value);
         if (value !== null) {
             var data = value;
             this.getVPQData(data);
@@ -120,6 +119,8 @@ class Home extends Component {
     
     }
 
+    
+      
     componentDidMount() {
         this.loadUserData();
     }

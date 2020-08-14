@@ -4,7 +4,7 @@ class MainApiClient {
 
     getUrl(entities = [], parameters = {}){
 
-        var url = "https://infinitycloudadmin.uniprint.net/api";
+        var url = "https://infinitycloudc-stage.azurewebsites.net/api";
 
         entities.forEach(entity => {
             url += '/' + entity;
