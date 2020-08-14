@@ -75,10 +75,10 @@ class MainApiClient_proximitydevice extends MainApiClient {
     }   
     GET_proximitydevice_printers_mappable(callback, index){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
                 const config = {
-                    url: self.getUrl(['proximitydevices', 'printers', 'mappable']),
+                    url: await self.getUrl(['proximitydevices', 'printers', 'mappable']),
                     method: 'get',
                     headers: {
                         "Content-Type": "application/json",

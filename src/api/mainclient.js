@@ -1,11 +1,14 @@
+import AsyncStorage from '@react-native-community/async-storage';
+
 class MainApiClient {
     constructor(){
     }
 
-    getUrl(entities = [], parameters = {}){
-
-        var url = "https://infinitycloudc-stage.azurewebsites.net/api";
-
+    async getUrl(entities = [], parameters = {}){
+        // console.log('asdasdasd')
+        var fetchURL = await AsyncStorage.getItem('com.processfusion.baseurl') 
+        // var url = "https://infinitycloudadmin.uniprint.net";
+        var url = JSON.parse(fetchURL)
         entities.forEach(entity => {
             url += '/' + entity;
         });

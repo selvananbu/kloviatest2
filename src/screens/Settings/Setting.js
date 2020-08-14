@@ -31,10 +31,11 @@ class Setting extends Component {
         this.onSignOutPressed = this.onSignOutPressed.bind(this);
     }
 
-    onSignOutPressed(){
+    async onSignOutPressed(){
         ToastAndroid.show("Signed Out Sucessfully..",ToastAndroid.SHORT);
-        AsyncStorage.removeItem("com.processfusion.userdata");
         this.props.setUserCredentials({});
+        await AsyncStorage.removeItem("com.processfusion.userdata");
+
         this.props.navigation.navigate("Login");
     }
     onFingerPressed(){
