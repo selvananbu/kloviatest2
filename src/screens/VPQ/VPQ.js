@@ -74,24 +74,17 @@ class VPQ extends Component {
         this.onPrintPressed = this.onPrintPressed.bind(this);
         this.getDocumentsFromServer = this.getDocumentsFromServer.bind(this);
         this.onActionSheetSelected = this.onActionSheetSelected.bind(this);
+        console.log('+++++++++++++++++++++');
+        this.navigationWillFocusListener = this.props.navigation.addListener('focus', () => {
+            this.loadUserData();
+
+
+        })
     }
     
     componentDidMount() {
-        console.log(this.props, 'tetstttttttttttttt132132')
         this.loadUserData();
     }
-
-    componentDidUpdate(prevProps, prevState){
-        console.log(prevProps.userdata.printedDoc, this.props, 'tetstttttttttsadsatsadasdtttt123132')
-
-        if(prevProps.userdata.printedDoc.length !== this.props.userdata.printedDoc.length && this.props.route.name === "VPQ"){
-            // this.setState({printedDocument: [], printQueueDocument: []} )
-            this.loadUserData();
-            console.log('tetsttttasdsadtttttsadsatsadasdtttt123132')
-
-        }
-        
-    }   
 
     getConnectors(){
         var list = [];
@@ -192,19 +185,8 @@ class VPQ extends Component {
         }
     }
 
-  
-    componentDidUpdate(prevProps) {
-        if (prevProps.isFocused !== this.props.isFocused) {
-          // Use the `this.props.isFocused` boolean
-          // Call any action
-          console.log("@@@@@@@@@@@@@@@@@@@@@@@@");
-        }
-      }
-   
-
     onPrintPressed(file) {
         // this.setState({printedDocument: [], printQueueDocument: []} )
-        this.props.printedDocument([], false)
 
         this.props.navigation.navigate("Printer",{param:file,userdata:this.props.userdata});
         // this.setState({ showSecurePinModal: true, currentfile: file })

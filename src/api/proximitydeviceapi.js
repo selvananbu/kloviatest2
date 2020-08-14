@@ -12,10 +12,10 @@ class MainApiClient_proximitydevice extends MainApiClient {
 
     GET_printer_from_proximity_id(callback,proximityId){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
                 const config = {
-                    url: self.getUrl(['proximitydevices',"printers",proximityId]),
+                    url: await self.getUrl(['proximitydevices',"printers",proximityId]),
                     method: 'get',
                     headers: {
                         "Content-Type": "application/json",
@@ -44,10 +44,10 @@ class MainApiClient_proximitydevice extends MainApiClient {
 
     GET_proximitydevice_list(callback){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
                 const config = {
-                    url: self.getUrl(['proximitydevices']),
+                    url: await self.getUrl(['proximitydevices']),
                     method: 'get',
                     headers: {
                         "Content-Type": "application/json",

@@ -65,6 +65,12 @@ class Home extends Component {
             recentdocs: [],
             appState: AppState.currentState
         }
+
+        this.navigationWillFocusListener = this.props.navigation.addListener('focus', () => {
+            this.loadUserData();
+
+
+        })
     }
     
     static navigationOptions = ({ navigation }) => {
@@ -96,10 +102,14 @@ class Home extends Component {
         }
     }
 
+    componentWillUnmount () {
+        this.navigationWillFocusListener.remove()
+    }
+
     getPrintJobsCurrentCallback(response){
         if (response.status === 200) {
             this.setState({ vpqdata: response.data.length, recentdocs: response.data })
-            
+
 
         }
         else {

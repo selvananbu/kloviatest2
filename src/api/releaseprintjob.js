@@ -13,9 +13,9 @@ class MainApiClient_releaseprintjob extends MainApiClient {
     
    POST_releaseprintjob(callback, body = {}){
         var self = this;
-        ensureAccessTokenIsValid(function(accessToken){
+        ensureAccessTokenIsValid(async function(accessToken){
             try {
-                RNFetchBlob.fetch('POST', self.getUrl(['printjobs', 'release','v2']), {
+                RNFetchBlob.fetch('POST', await self.getUrl(['printjobs', 'release','v2']), {
                     "Authorization": `Bearer ${accessToken}`,
     
                     'Content-Type': 'application/json',

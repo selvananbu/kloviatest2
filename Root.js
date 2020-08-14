@@ -60,7 +60,7 @@ function MyTabBar({ state, descriptors, navigation }) {
         const isFocused = state.index === index;
 
         const onTabPress = () => {
-          console.log("klmkmlkmkl");
+          // console.log("klmkmlkmkl");
           const event = navigation.emit({
             type: 'tabPress',
             target: route.key,
@@ -114,7 +114,7 @@ function ChatStack(){
   )
 }
 const getSettingsIcon = (navigation) => {
-  console.log("klmlkmlkm",navigation);
+  // console.log("klmlkmlkm",navigation);
   return(
     <TouchableOpacity style={{width:width(10),alignItems:"center",justifyContent:"center"}} onPress={() => navigation.navigate("Setting")}>
     <Image source={require("./src/image/settingicon.png")} style={{width:width(5),height:height(5)}} resizeMode="contain"/>
