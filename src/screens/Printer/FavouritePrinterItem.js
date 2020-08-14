@@ -45,12 +45,32 @@ class FavouritePrinterItem extends Component {
     onFavouritePressed(printer){
        this.props.onFavouritePressed(printer)
     }
+    isPrinterSelected(){
+        if(this.props.selectPrinterList === [] || this.props.selectPrinterList === undefined) return false;
+        var isPrinterFound = false;
+        this.props.selectPrinterList.map((printer) => {
+            if(printer.PrinterId === this.props.printer.PrinterId){
+                isPrinterFound =  true;
+            }
+        })
+
+        return isPrinterFound;
+    }
     render() {
         var printer = this.props.printer;
-        
+        var isSelected = this.isPrinterSelected();
         return (
-            <TouchableOpacity style={{width:width(65),height:height(14),alignItems:"center",justifyContent:"center",borderWidth:1,marginRight:width(5),marginLeft:width(5),borderColor:"rgba(14, 70, 121, 0.1)",paddingLeft:width(4),flexDirection:"column"}}>
-                <View style={{width:width(60),height:height(8),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>
+            <TouchableOpacity style={{width:width(70),height:height(14),alignItems:"center",justifyContent:"center",borderWidth:1,marginRight:width(5),marginLeft:width(5),borderColor:"rgba(14, 70, 121, 0.1)",paddingLeft:width(4),flexDirection:"column"}}>
+                   
+                <View style={{width:width(68),height:height(8),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>
+                {isSelected
+                ?
+                <View style={{width:width(10),height:height(6),alignItems:"flex-start",justifyContent:"flex-start"}}>
+                <Image source={require("../../image/tick.png")} style={{width:width(6),height:height(5)}} resizeMode="contain"/>
+                </View>
+                :
+                <View/>
+                }
                 <View style={{width:width(55),height:height(8),alignItems:"flex-start",justifyContent:"center"}}>
             <View style={{width:width(60),height:height(4),flexDirection:"row"}}>
             <View style={{width:width(45),alignItems:"flex-start",justifyContent:"center",height:height(4)}}>

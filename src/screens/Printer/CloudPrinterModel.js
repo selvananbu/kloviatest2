@@ -14,23 +14,50 @@ class ClooudPrinter extends Component {
             showPrintDialog:false,
             selectedbin:null,
             bins:[],
-            startPage:0,
-            endPage:0,
-            orientation:[{label:"landscape",value:0},{label:"portrait",value:1}],
-            color:[{label:"Black & White",value:0},{label:"Color",value:1}],
-            duplex:[{label:"1 - Sided",value:0},{label:"2 - Sided",value:1}],
+            startPage:1,
+            endPage:1,
+            orientation:[{label:"landscape",value:1},{label:"portrait",value:2}],
+            color:[{label:"Black & White",value:1},{label:"Color",value:2}],
+            duplex:[{label:"1 - Sided",value:1},{label:"2 - Sided",value:2}],
             selectedOrientation:1,
-            copies:0,
-            selectedColor:1,
+            copies:1,
+            selectedColor:2,
             collate:0,
-            selectedduplex:0
+            printProfileId:-1,
+            selectedduplex:1
         }
+
+        this.onPrintPressed = this.onPrintPressed.bind(this);
     }
 
     componentDidMount(){
         if(this.props.renderStation !== undefined){
             this.setState({renderStation:this.props.renderStation,bins:this.props.bins,selectedbin:this.props.selectedbin,showPrintDialog:this.props.showPrintDialog})
         }
+    }
+    onPrintPressed(){
+     
+            if(this.props.onRemotePrinterPressed !== undefined){
+                var body ={
+                        "ReleaseQueues": [{
+                                "RenderStationId": this.state.renderStation.RenderStationId,
+                                "PrintJobId": "",
+                                "PrinterId": "",
+                                "BinId": this.state.selectedbin,
+                                "StartPage": this.state.startPage,
+                                "EndPage": this.state.endPage,
+                                "Orientation": this.state.selectedOrientation,
+                                "Copies": this.state.copies,
+                                "Color":this.state.selectedColor,
+                                "Duplex": this.state.selectedduplex,
+                                "Collate":this.state.selectedduplex,
+                                "PrintProfileId":-1
+                            }
+                        ],
+                        "Pin": "1234"
+                }
+                this.props.onRemotePrinterPressed(body);
+            }
     }
     // static getDerivedStateFromProps(props, state) {
     //     if (props.renderStation !== state.renderStation) {
@@ -44,7 +71,6 @@ class ClooudPrinter extends Component {
     //   }
 
     render() {
-        console.log("jknbjnjn",this.state);
         return (
             
              <View style={styles.modalViewPrint}>
@@ -162,7 +188,7 @@ class ClooudPrinter extends Component {
                             />
                             </View>
                             <View style={{width:width(65),alignItems:"flex-end",justifyContent:"flex-end"}}>
-                <TouchableOpacity style={{backgroundColor:"#fec300",width:width(15),height:width(15),borderRadius:width(15)/2,alignItems:"center",justifyContent:"center"}}>
+                <TouchableOpacity style={{backgroundColor:"#fec300",width:width(15),height:width(15),borderRadius:width(15)/2,alignItems:"center",justifyContent:"center"}} onPress={() =>this.onPrintPressed()}>
                  <Image source={require("../../image/light-print.png")} style={{width:width(8),height:height(8)}} resizeMode="contain"/>
                 </TouchableOpacity>
                 </View>

@@ -55,24 +55,24 @@ class PrinterItem extends Component {
         var isPrinterFound = false;
         this.props.selectPrinterList.map((printer) => {
             if(printer.PrinterId === this.props.printer.PrinterId){
-                console.log("jknkjn",printer.PrinterId,this.props.printer.PrinterId);
-                return true;
+                isPrinterFound =  true;
             }
         })
+
+        return isPrinterFound;
     }
     
     render() {
         var printer = this.props.printer;
         var isSelected = this.isPrinterSelected();
-        console.log(isSelected,"hbjhbj");
         
         return (
             <TouchableOpacity style={{width:width(96),height:height(14),alignItems:"center",justifyContent:"center",marginTop:height(1),marginBottom:height(1),borderWidth:1,borderColor:"rgba(14, 70, 121, 0.1)",paddingLeft:width(4),flexDirection:"column"}} onPress={() =>this.props.onPrinterItemPressed(this.props.printer)}>
                 <View style={{width:width(90),height:height(8),alignItems:"center",justifyContent:"center",flexDirection:"row"}}>
                 {isSelected
                 ?
-                <View style={{width:width(8),height:height(6),alignItems:"flex-start",justifyContent:"flex-start"}}>
-                <CheckBox value={this.state.isSelected}/>
+                <View style={{width:width(10),height:height(6),alignItems:"flex-start",justifyContent:"flex-start"}}>
+                <Image source={require("../../image/tick.png")} style={{width:width(6),height:height(5)}} resizeMode="contain"/>
                 </View>
                 :
                 <View/>
