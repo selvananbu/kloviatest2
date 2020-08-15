@@ -8,7 +8,7 @@ class MainApiClient {
         // console.log('asdasdasd')
         var fetchURL = await AsyncStorage.getItem('com.processfusion.baseurl') 
         // var url = "https://infinitycloudadmin.uniprint.net";
-        var url = JSON.parse(fetchURL)
+        var url = fetchURL
         entities.forEach(entity => {
             url += '/' + entity;
         });

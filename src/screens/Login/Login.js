@@ -36,7 +36,7 @@ class Login extends Component {
 
   
   
-    componentDidMount() {
+    async componentDidMount() {
         var self = this;
         SplashScreen.hide();
         // AppInstalledChecker
@@ -45,16 +45,16 @@ class Login extends Component {
             self.checkForFirstTime(false);
 
         // });
-        AsyncStorage.getItem('com.processfusion.baseurl').then((baseurl) => {
-            if(baseurl === null){
-                this.setState({baseurl:DEFAULT_BASEURL})
-                AsyncStorage.setItem('com.processfusion.baseurl',DEFAULT_BASEURL);
-            }
-            else{
-                console.log("klmk",baseurl);
-                self.setState({baseurl: JSON.parse(baseurl)})
-            }
-          });
+        var baseurl = await AsyncStorage.getItem('com.processfusion.baseurl')
+        console.log(baseurl, 'asdasdads')
+        if(baseurl === null){
+            this.setState({baseurl:DEFAULT_BASEURL})
+            AsyncStorage.setItem('com.processfusion.baseurl',DEFAULT_BASEURL);
+        }
+        else{
+            console.log("klmk",baseurl);
+            self.setState({baseurl: baseurl})
+        }
 
         //   console.log(value, 'userDATAAAAAAAAAAAAAAAA')
 
@@ -147,7 +147,7 @@ class Login extends Component {
     }
 
     getTokenCallback(responseData){
-        // console.log(responseData, 'asdasd')
+        console.log(responseData, 'asdasd')
         if (responseData.status === 200) {
             var data = responseData.data;
             this.props.setUserCredentials(data);
@@ -177,7 +177,7 @@ class Login extends Component {
             }
     }
     render() {
-
+        // console.log(this.state.baseurl, 'sadasd4654')
         return (
             
             <KeyboardAwareScrollView>
